@@ -1,0 +1,33 @@
+# ===== Maven / Java 25 =====
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+.mvn/timing.properties
+.mvn/.maven-jvm.config
+.mvn/.lastUpdated
+
+# ===== Logs e crashes =====
+*.log
+hs_err_pid*
+replay_pid*
+backend.log
+backend-err.log
+
+# ===== Segredos (nunca commitar) =====
+.env
+.env.local
+!.env.example
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# ===== SO =====
+.DS_Store
+Thumbs.db
+desktop.ini

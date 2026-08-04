@@ -1,0 +1,55 @@
+# Banco de dados (mesmo banco MySQL do sistema legado)
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/biblioteca?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+
+  jpa:
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  web:
+    locale: pt-BR
+    locale-resolver: accept-header
+
+# JWT
+app:
+  jwt:
+    # Obrigatório (sem default): gere com `openssl rand -base64 32`.
+    secret: ${JWT_SECRET:wgIUi0eeBc9C1dE9fLxEI0fh+MSfrNDcjHU0eRa7riA=}
+    # Opcional: chave anterior durante janela de rotação sem downtime.
+    previous-secret: ${JWT_PREVIOUS_SECRET:c2rWXUBubXSflmbZu4UHE0/q2rE+bVo4jkAPbYshlm0=}
+    access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:420000}   # 7 min
+    refresh-expiration-days: ${JWT_REFRESH_EXPIRATION_DAYS:7}  # 7 dias
+    # Cookie httpOnly do refresh token.
+    cookie-secure: ${COOKIE_SECURE:false}     # true em produção (HTTPS)
+    cookie-same-site: ${COOKIE_SAMESITE:Lax}  # None + Secure se o frontend for cross-site
+
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    refresh-capacity: ${RATE_LIMIT_REFRESH_CAPACITY:10}  # 10 req/min /api/auth/refresh
+    login-capacity: ${RATE_LIMIT_LOGIN_CAPACITY:5}        # 5 req/min /api/auth/login
+
+server:
+  port: ${PORT:8000}
