@@ -1,7 +1,7 @@
 package com.escola.biblioteca.controller;
 
 import com.escola.biblioteca.dto.request.AutorRequest;
-import com.escola.biblioteca.model.Autor;
+import com.escola.biblioteca.dto.response.AutorResponse;
 import com.escola.biblioteca.service.AutorService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -28,17 +28,17 @@ public class AutorController {
     }
 
     @GetMapping
-    public List<Autor> listar(@RequestParam(required = false) String nome) {
+    public List<AutorResponse> listar(@RequestParam(required = false) String nome) {
         return autorService.listar(nome);
     }
 
     @PostMapping
-    public ResponseEntity<Autor> salvar(@Valid @RequestBody AutorRequest request) {
+    public ResponseEntity<AutorResponse> salvar(@Valid @RequestBody AutorRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(autorService.salvar(request));
     }
 
     @PutMapping("/{id}")
-    public Autor atualizar(@PathVariable Integer id, @Valid @RequestBody AutorRequest request) {
+    public AutorResponse atualizar(@PathVariable Integer id, @Valid @RequestBody AutorRequest request) {
         return autorService.atualizar(id, request);
     }
 

@@ -1,38 +1,44 @@
 package com.escola.biblioteca.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Table;
 
-@Entity
-@Table(name = "locatario")
+@Table("locatario")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Locatario {
+public class Locatario implements Persistable<String> {
 
     @Id
-    @Column(name = "CPF", length = 14)
     private String cpf;
 
-    @Column(name = "NOME", length = 45, nullable = false)
     private String nome;
 
-    @Column(name = "telefone", length = 14)
     private String telefone;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CODIGO_PROFESSOR")
-    private Professor professor;
+    private Integer codigoProfessor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CODIGO_ALUNO")
-    private Aluno aluno;
+    private Integer codigoAluno;
+
+    @Transient
+    private boolean novo;
+
+    @Override
+    public String getId() {
+        return cpf;
+    }
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
+    public void marcarNovo() {
+        this.novo = true;
+    }
 }

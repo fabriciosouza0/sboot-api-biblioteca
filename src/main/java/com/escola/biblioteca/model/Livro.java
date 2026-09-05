@@ -1,38 +1,44 @@
 package com.escola.biblioteca.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Table;
 
-@Entity
-@Table(name = "livro")
+@Table("livro")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Livro {
+public class Livro implements Persistable<Long> {
 
     @Id
-    @Column(name = "codigo")
-    private Long id;
+    private Long codigo;
 
-    @Column(name = "titulo", length = 45, nullable = false)
     private String titulo;
 
-    @Column(name = "qtd")
     private Integer qtd;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "codigo_autor")
-    private Autor autor;
+    private Integer codigoAutor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "codigo_cdd")
-    private Cdd cdd;
+    private Long codigoCdd;
+
+    @Transient
+    private boolean novo;
+
+    @Override
+    public Long getId() {
+        return codigo;
+    }
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
+    public void marcarNovo() {
+        this.novo = true;
+    }
 }

@@ -1,27 +1,19 @@
 package com.escola.biblioteca.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
-@Entity
-@Table(name = "autor")
+@Table("autor")
 @Getter
 @Setter
 @NoArgsConstructor
 public class Autor {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "codigo")
-    private Integer id;
+    private Integer codigo;
 
-    @Column(name = "nome", length = 45)
     private String nome;
 }

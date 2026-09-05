@@ -1,7 +1,7 @@
 package com.escola.biblioteca.controller;
 
 import com.escola.biblioteca.dto.request.TurmaRequest;
-import com.escola.biblioteca.model.Turma;
+import com.escola.biblioteca.dto.response.TurmaResponse;
 import com.escola.biblioteca.service.TurmaService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -27,17 +27,17 @@ public class TurmaController {
     }
 
     @GetMapping
-    public List<Turma> listar() {
+    public List<TurmaResponse> listar() {
         return turmaService.listar();
     }
 
     @PostMapping
-    public ResponseEntity<Turma> salvar(@Valid @RequestBody TurmaRequest request) {
+    public ResponseEntity<TurmaResponse> salvar(@Valid @RequestBody TurmaRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(turmaService.salvar(request));
     }
 
     @PutMapping("/{id}")
-    public Turma atualizar(@PathVariable Integer id, @Valid @RequestBody TurmaRequest request) {
+    public TurmaResponse atualizar(@PathVariable Integer id, @Valid @RequestBody TurmaRequest request) {
         return turmaService.atualizar(id, request);
     }
 

@@ -5,6 +5,7 @@ import com.escola.biblioteca.repository.AlunoRepository;
 import com.escola.biblioteca.repository.AutorRepository;
 import com.escola.biblioteca.repository.CddRepository;
 import com.escola.biblioteca.repository.LivroRepository;
+import com.escola.biblioteca.repository.LocaRepository;
 import com.escola.biblioteca.repository.LocatarioRepository;
 import com.escola.biblioteca.repository.ProfessorRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,18 +21,18 @@ public class DashboardService {
     private final CddRepository cddRepository;
     private final AlunoRepository alunoRepository;
     private final ProfessorRepository professorRepository;
-    private final LocacaoService locacaoService;
+    private final LocaRepository locaRepository;
 
     public DashboardResponse stats() {
         return new DashboardResponse(
                 livroRepository.count(),
-                locacaoService.nAtrasados(),
+                locaRepository.countAtrasados(),
                 professorRepository.count(),
                 alunoRepository.count(),
                 locatarioRepository.count(),
                 autorRepository.count(),
                 cddRepository.count(),
-                locacaoService.nProfessoresComLivros(),
-                locacaoService.nAlunosComLivros());
+                locaRepository.countProfessoresComLivros(),
+                locaRepository.countAlunosComLivros());
     }
 }

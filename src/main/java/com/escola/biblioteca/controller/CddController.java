@@ -2,7 +2,7 @@ package com.escola.biblioteca.controller;
 
 import com.escola.biblioteca.dto.request.CddRequest;
 import com.escola.biblioteca.dto.request.CddUpdateRequest;
-import com.escola.biblioteca.model.Cdd;
+import com.escola.biblioteca.dto.response.CddResponse;
 import com.escola.biblioteca.service.CddService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -29,17 +29,17 @@ public class CddController {
     }
 
     @GetMapping
-    public List<Cdd> listar(@RequestParam(required = false) String descricao) {
+    public List<CddResponse> listar(@RequestParam(required = false) String descricao) {
         return cddService.listar(descricao);
     }
 
     @PostMapping
-    public ResponseEntity<Cdd> salvar(@Valid @RequestBody CddRequest request) {
+    public ResponseEntity<CddResponse> salvar(@Valid @RequestBody CddRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(cddService.salvar(request));
     }
 
     @PutMapping("/{id}")
-    public Cdd atualizar(@PathVariable Long id, @Valid @RequestBody CddUpdateRequest request) {
+    public CddResponse atualizar(@PathVariable Long id, @Valid @RequestBody CddUpdateRequest request) {
         return cddService.atualizar(id, request);
     }
 

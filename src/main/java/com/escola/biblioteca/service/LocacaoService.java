@@ -1,16 +1,18 @@
 package com.escola.biblioteca.service;
 
+import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.dto.request.LocacaoRequest;
 import com.escola.biblioteca.dto.response.LocacaoResponse;
 import com.escola.biblioteca.exception.BusinessException;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
-import com.escola.biblioteca.mapper.LocacaoMapper;
 import com.escola.biblioteca.model.Livro;
 import com.escola.biblioteca.model.Loca;
 import com.escola.biblioteca.model.Locatario;
 import com.escola.biblioteca.repository.LivroRepository;
 import com.escola.biblioteca.repository.LocaRepository;
 import com.escola.biblioteca.repository.LocatarioRepository;
+import com.escola.biblioteca.repository.query.LocacaoQueryRepository;
+import com.escola.biblioteca.repository.query.LocacaoQueryRepository.LocacaoRow;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -25,7 +27,8 @@ public class LocacaoService {
     private final LocaRepository locaRepository;
     private final LivroRepository livroRepository;
     private final LocatarioRepository locatarioRepository;
-    private final LocacaoMapper locacaoMapper;
+    private final LocacaoQueryRepository locacaoQueryRepository;
+    private final DashboardPublisher dashboardPublisher;
 
     @Transactional
     public LocacaoResponse salvar(LocacaoRequest request) {
@@ -37,20 +40,31 @@ public class LocacaoService {
         Locatario locatario = locatarioRepository.findById(request.cpfLocatario())
                 .orElseThrow(() -> new ResourceNotFoundException("error.notfound.locatario"));
 
+        LocalDate hoje = LocalDate.now();
         Loca loca = new Loca();
-        loca.setLivro(livro);
-        loca.setLocatario(locatario);
-        loca.setDataDeLocacao(LocalDate.now());
-        loca.setDataParaDevolucao(LocalDate.now().plusDays(request.dias()));
-        loca.setAtrasado("N");
-        return toResponse(locaRepository.save(loca));
+        loca.setCodigoLivro(livro.getCodigo());
+        loca.setCpfLocatario(locatario.getCpf());
+        loca.setDataDeLocacao(hoje);
+        loca.setDataParaDevolucao(hoje.plusDays(request.dias()));
+        loca.setAtrasado(false);
+
+        dashboardPublisher.dadosAlterados();
+        Loca salvo = locaRepository.save(loca);
+        return toResponse(new LocacaoRow(
+                salvo.getCodigo(),
+                salvo.getCodigoLivro(),
+                livro.getTitulo(),
+                salvo.getCpfLocatario(),
+                locatario.getNome(),
+                salvo.getDataDeLocacao(),
+                salvo.getDataParaDevolucao()));
     }
 
     public List<LocacaoResponse> listar(String locatario) {
-        List<Loca> locacoes = (locatario == null || locatario.isBlank())
-                ? locaRepository.findAllByOrderByDataDeLocacaoDesc()
-                : locaRepository.searchPorLocatario(locatario.trim());
-        return locacoes.stream().map(this::atualizarStatusEAplicar).toList();
+        String term = (locatario == null || locatario.isBlank()) ? null : locatario.trim();
+        return locacaoQueryRepository.buscarTodas(term).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional
@@ -59,49 +73,21 @@ public class LocacaoService {
             throw new ResourceNotFoundException("error.notfound.locacao");
         }
         locaRepository.deleteById(id);
+        dashboardPublisher.dadosAlterados();
     }
 
-    @Transactional
-    public long nAtrasados() {
-        atualizarFlags();
-        return locaRepository.findAll().stream().filter(l -> "Y".equals(l.getAtrasado())).count();
-    }
-
-    @Transactional(readOnly = true)
-    public long nProfessoresComLivros() {
-        return locaRepository.findAll().stream()
-                .filter(l -> l.getLocatario().getProfessor() != null)
-                .count();
-    }
-
-    @Transactional(readOnly = true)
-    public long nAlunosComLivros() {
-        return locaRepository.findAll().stream()
-                .filter(l -> l.getLocatario().getAluno() != null)
-                .count();
-    }
-
-    private LocacaoResponse atualizarStatusEAplicar(Loca l) {
-        long dias = ChronoUnit.DAYS.between(LocalDate.now(), l.getDataParaDevolucao());
+    private LocacaoResponse toResponse(LocacaoRow row) {
+        long dias = ChronoUnit.DAYS.between(LocalDate.now(), row.dataParaDevolucao());
         boolean atrasado = dias <= 0;
-        String flag = atrasado ? "Y" : "N";
-        if (!flag.equals(l.getAtrasado())) {
-            l.setAtrasado(flag);
-            locaRepository.save(l);
-        }
-        return locacaoMapper.toResponse(l, atrasado, dias);
-    }
-
-    private void atualizarFlags() {
-        for (Loca l : locaRepository.findAll()) {
-            long dias = ChronoUnit.DAYS.between(LocalDate.now(), l.getDataParaDevolucao());
-            l.setAtrasado(dias <= 0 ? "Y" : "N");
-        }
-        locaRepository.flush();
-    }
-
-    private LocacaoResponse toResponse(Loca l) {
-        long dias = ChronoUnit.DAYS.between(LocalDate.now(), l.getDataParaDevolucao());
-        return locacaoMapper.toResponse(l, dias <= 0, dias);
+        return new LocacaoResponse(
+                row.codigo(),
+                row.codigoLivro(),
+                row.livro(),
+                row.cpfLocatario(),
+                row.locatario(),
+                row.dataDeLocacao(),
+                row.dataParaDevolucao(),
+                atrasado,
+                dias);
     }
 }

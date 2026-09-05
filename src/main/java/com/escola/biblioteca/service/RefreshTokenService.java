@@ -34,10 +34,11 @@ public class RefreshTokenService {
         String token = generateOpaqueToken();
         RefreshToken entity = new RefreshToken();
         entity.setTokenHash(sha256(token));
-        entity.setAdm(adm);
+        entity.setAdmId(adm.getCodigo());
         entity.setUserAgent(truncate(request != null ? request.getHeader("User-Agent") : null, 500));
         entity.setIp(remoteIp(request));
         entity.setExpiresAt(LocalDateTime.now().plusDays(refreshExpirationDays));
+        entity.setCreatedAt(LocalDateTime.now());
         repository.save(entity);
         return token;
     }

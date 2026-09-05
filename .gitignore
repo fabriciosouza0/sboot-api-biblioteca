@@ -12,8 +12,12 @@ target/
 *.log
 hs_err_pid*
 replay_pid*
+*.hprof
 backend.log
 backend-err.log
+
+# ===== Spring Boot local profile =====
+application-local.*
 
 # ===== Segredos (nunca commitar) =====
 .env

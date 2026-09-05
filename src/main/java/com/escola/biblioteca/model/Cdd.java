@@ -1,24 +1,38 @@
 package com.escola.biblioteca.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Table;
 
-@Entity
-@Table(name = "cdd")
+@Table("cdd")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Cdd {
+public class Cdd implements Persistable<Long> {
 
     @Id
-    @Column(name = "CODIGO")
-    private Long id;
+    private Long codigo;
 
-    @Column(name = "DESCRICAO", length = 45, nullable = false)
     private String descricao;
+
+    @Transient
+    private boolean novo;
+
+    @Override
+    public Long getId() {
+        return codigo;
+    }
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
+    public void marcarNovo() {
+        this.novo = true;
+    }
 }

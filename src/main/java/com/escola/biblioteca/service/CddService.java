@@ -2,10 +2,12 @@ package com.escola.biblioteca.service;
 
 import com.escola.biblioteca.dto.request.CddRequest;
 import com.escola.biblioteca.dto.request.CddUpdateRequest;
+import com.escola.biblioteca.dto.response.CddResponse;
 import com.escola.biblioteca.exception.BusinessException;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
 import com.escola.biblioteca.model.Cdd;
 import com.escola.biblioteca.repository.CddRepository;
+import com.escola.biblioteca.repository.query.CddQueryRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,33 +18,34 @@ import org.springframework.transaction.annotation.Transactional;
 public class CddService {
 
     private final CddRepository cddRepository;
+    private final CddQueryRepository cddQueryRepository;
 
-    public List<Cdd> listar(String descricao) {
-        return (descricao == null || descricao.isBlank())
-                ? cddRepository.findAll()
-                : cddRepository.findByDescricaoContainingIgnoreCase(descricao.trim());
+    public List<CddResponse> listar(String descricao) {
+        String term = (descricao == null || descricao.isBlank()) ? null : descricao.trim();
+        return cddQueryRepository.buscarTodos(term);
     }
 
     @Transactional
-    public Cdd salvar(CddRequest request) {
+    public CddResponse salvar(CddRequest request) {
         if (cddRepository.existsById(request.id())) {
             throw new BusinessException("error.cdd.codigo.duplicado");
         }
         Cdd cdd = new Cdd();
-        cdd.setId(request.id());
+        cdd.setCodigo(request.id());
         cdd.setDescricao(request.descricao());
-        return cddRepository.save(cdd);
+        cdd.marcarNovo();
+        return toResponse(cddRepository.save(cdd));
     }
 
     @Transactional
-    public Cdd atualizar(Long id, CddUpdateRequest request) {
+    public CddResponse atualizar(Long id, CddUpdateRequest request) {
         if (!cddRepository.existsById(id)) {
             throw new ResourceNotFoundException("error.notfound.cdd");
         }
         Cdd cdd = new Cdd();
-        cdd.setId(id);
+        cdd.setCodigo(id);
         cdd.setDescricao(request.descricao());
-        return cddRepository.save(cdd);
+        return toResponse(cddRepository.save(cdd));
     }
 
     @Transactional
@@ -55,5 +58,9 @@ public class CddService {
 
     public long count() {
         return cddRepository.count();
+    }
+
+    private CddResponse toResponse(Cdd cdd) {
+        return new CddResponse(cdd.getCodigo(), cdd.getDescricao());
     }
 }

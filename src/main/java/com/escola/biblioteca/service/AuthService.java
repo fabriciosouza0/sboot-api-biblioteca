@@ -33,7 +33,8 @@ public class AuthService {
         RefreshToken stored = refreshTokenService.validateAndGet(refreshToken);
         // Rotação estrita: o refresh token usado é revogado e nunca pode ser reutilizado.
         refreshTokenService.revoke(refreshToken);
-        Adm adm = stored.getAdm();
+        Adm adm = admRepository.findById(stored.getAdmId())
+                .orElseThrow(() -> new BusinessException("error.auth.refresh.invalid"));
         return issueTokenPair(adm, httpRequest);
     }
 
@@ -45,7 +46,7 @@ public class AuthService {
     @Transactional
     public void logoutAll(String login) {
         admRepository.findByLogin(login)
-                .ifPresent(adm -> refreshTokenService.revokeAllByAdmId(adm.getId()));
+                .ifPresent(adm -> refreshTokenService.revokeAllByAdmId(adm.getCodigo()));
     }
 
     private TokenPair issueTokenPair(Adm adm, HttpServletRequest httpRequest) {

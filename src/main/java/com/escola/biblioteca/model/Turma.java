@@ -1,31 +1,23 @@
 package com.escola.biblioteca.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
-@Entity
-@Table(name = "turma")
+@Table("turma")
 @Getter
 @Setter
 @NoArgsConstructor
 public class Turma {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "CODIGO")
-    private Integer id;
+    private Integer codigo;
 
-    @Column(name = "DESCRICAO", length = 45, nullable = false)
     private String descricao;
 
-    public Turma(Integer id) {
-        this.id = id;
+    public Turma(Integer codigo) {
+        this.codigo = codigo;
     }
 }

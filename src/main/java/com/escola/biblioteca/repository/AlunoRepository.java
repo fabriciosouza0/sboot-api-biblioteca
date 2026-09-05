@@ -2,9 +2,10 @@ package com.escola.biblioteca.repository;
 
 import com.escola.biblioteca.model.Aluno;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.CrudRepository;
 
-public interface AlunoRepository extends JpaRepository<Aluno, Integer> {
+public interface AlunoRepository extends CrudRepository<Aluno, Integer> {
 
-    Optional<Aluno> findByTurmaId(Integer idTurma);
+    Optional<Aluno> findByCodigoTurma(Integer codigoTurma);
+
 }

@@ -1,19 +1,13 @@
 # Configuração de teste (Testcontainers sobrescreve datasource via DynamicPropertySource)
 spring:
-  jpa:
-    open-in-view: false
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-    hibernate:
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-
   messages:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
+
+  mvc:
+    async:
+      request-timeout: ${ASYNC_REQUEST_TIMEOUT:0}
 
   flyway:
     enabled: true
@@ -35,3 +29,6 @@ app:
 
   rate-limit:
     enabled: false
+
+  sse:
+    heartbeat-ms: 1000

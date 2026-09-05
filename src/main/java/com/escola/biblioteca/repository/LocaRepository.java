@@ -1,21 +1,17 @@
 package com.escola.biblioteca.repository;
 
 import com.escola.biblioteca.model.Loca;
-import java.util.List;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.CrudRepository;
 
-public interface LocaRepository extends JpaRepository<Loca, Integer> {
+public interface LocaRepository extends CrudRepository<Loca, Integer> {
 
-    @EntityGraph(attributePaths = {"livro", "livro.autor", "livro.cdd", "locatario"})
-    List<Loca> findAllByOrderByDataDeLocacaoDesc();
+    @Query("SELECT COUNT(*) FROM loca WHERE data_para_devolucao <= CURRENT_DATE")
+    long countAtrasados();
 
-    @EntityGraph(attributePaths = {"livro", "locatario", "locatario.professor", "locatario.aluno"})
-    @Override
-    List<Loca> findAll();
+    @Query("SELECT COUNT(*) FROM loca l JOIN locatario lt ON lt.cpf = l.cpf_locatario WHERE lt.codigo_professor IS NOT NULL")
+    long countProfessoresComLivros();
 
-    @Query("SELECT l FROM Loca l JOIN FETCH l.livro JOIN FETCH l.livro.autor JOIN FETCH l.livro.cdd JOIN FETCH l.locatario WHERE UPPER(l.locatario.nome) LIKE CONCAT('%', UPPER(:nome), '%') ORDER BY l.dataDeLocacao DESC")
-    List<Loca> searchPorLocatario(@Param("nome") String nome);
+    @Query("SELECT COUNT(*) FROM loca l JOIN locatario lt ON lt.cpf = l.cpf_locatario WHERE lt.codigo_aluno IS NOT NULL")
+    long countAlunosComLivros();
 }
