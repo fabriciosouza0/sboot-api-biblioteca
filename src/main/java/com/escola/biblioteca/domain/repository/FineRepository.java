@@ -14,4 +14,16 @@ public interface FineRepository extends CrudRepository<Fine, UUID> {
 
     @Query("SELECT COALESCE(SUM(balance_cents), 0) FROM fine WHERE patron_id = :patronId AND status IN ('PENDING','PARTIAL')")
     Integer sumBalanceByPatronId(UUID patronId);
+
+    @Query("SELECT COUNT(*) FROM fine f JOIN patron p ON f.patron_id = p.id WHERE p.institution_id = :institutionId AND f.status IN ('PENDING','PARTIAL')")
+    long countPendingByInstitutionId(UUID institutionId);
+
+    @Query("SELECT COALESCE(SUM(f.balance_cents), 0) FROM fine f JOIN patron p ON f.patron_id = p.id WHERE p.institution_id = :institutionId AND f.status IN ('PENDING','PARTIAL')")
+    long sumBalanceByInstitutionId(UUID institutionId);
+
+    @Query("SELECT COUNT(*) FROM fine WHERE status IN ('PENDING','PARTIAL')")
+    long countAllPending();
+
+    @Query("SELECT COALESCE(SUM(balance_cents), 0) FROM fine WHERE status IN ('PENDING','PARTIAL')")
+    long sumAllBalance();
 }

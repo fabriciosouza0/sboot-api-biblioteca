@@ -1,5 +1,6 @@
 package com.escola.biblioteca.controller;
 
+import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.domain.model.Hold;
 import com.escola.biblioteca.domain.repository.HoldRepository;
 import com.escola.biblioteca.domain.service.HoldService;
@@ -16,10 +17,13 @@ public class HoldController {
 
     private final HoldRepository holdRepository;
     private final HoldService holdService;
+    private final DashboardPublisher dashboardPublisher;
 
-    public HoldController(HoldRepository holdRepository, HoldService holdService) {
+    public HoldController(HoldRepository holdRepository, HoldService holdService,
+                          DashboardPublisher dashboardPublisher) {
         this.holdRepository = holdRepository;
         this.holdService = holdService;
+        this.dashboardPublisher = dashboardPublisher;
     }
 
     @GetMapping
@@ -32,18 +36,22 @@ public class HoldController {
     @PostMapping
     public ResponseEntity<Hold> criar(@PathVariable UUID institutionId, @RequestBody HoldRequest request) {
         Hold hold = holdService.placeHold(request.patronId(), request.workId(), request.libraryId());
+        dashboardPublisher.dadosAlterados();
         return ResponseEntity.status(HttpStatus.CREATED).body(hold);
     }
 
     @DeleteMapping("/{holdId}")
     public ResponseEntity<Void> cancelar(@PathVariable UUID institutionId, @PathVariable UUID holdId) {
         holdService.cancelHold(holdId);
+        dashboardPublisher.dadosAlterados();
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{holdId}/fulfill")
     public Hold cumprir(@PathVariable UUID institutionId, @PathVariable UUID holdId) {
-        return holdService.fulfillHold(holdId);
+        Hold fulfilled = holdService.fulfillHold(holdId);
+        dashboardPublisher.dadosAlterados();
+        return fulfilled;
     }
 
     @PostMapping("/expire")

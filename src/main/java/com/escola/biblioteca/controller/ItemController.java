@@ -1,5 +1,6 @@
 package com.escola.biblioteca.controller;
 
+import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.domain.model.Item;
 import com.escola.biblioteca.domain.model.ItemStatus;
 import com.escola.biblioteca.domain.repository.ItemRepository;
@@ -15,9 +16,11 @@ import org.springframework.web.bind.annotation.*;
 public class ItemController {
 
     private final ItemRepository itemRepository;
+    private final DashboardPublisher dashboardPublisher;
 
-    public ItemController(ItemRepository itemRepository) {
+    public ItemController(ItemRepository itemRepository, DashboardPublisher dashboardPublisher) {
         this.itemRepository = itemRepository;
+        this.dashboardPublisher = dashboardPublisher;
     }
 
     @GetMapping
@@ -40,7 +43,9 @@ public class ItemController {
         item.setCallNumber(request.callNumber());
         item.setStatus(ItemStatus.AVAILABLE);
         item.marcarNovo();
-        return ResponseEntity.status(HttpStatus.CREATED).body(itemRepository.save(item));
+        Item saved = itemRepository.save(item);
+        dashboardPublisher.dadosAlterados();
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
@@ -51,12 +56,15 @@ public class ItemController {
         item.setLibraryId(request.libraryId());
         item.setBarcode(request.barcode());
         item.setCallNumber(request.callNumber());
-        return itemRepository.save(item);
+        Item saved = itemRepository.save(item);
+        dashboardPublisher.dadosAlterados();
+        return saved;
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(@PathVariable UUID institutionId, @PathVariable UUID id) {
         itemRepository.deleteById(id);
+        dashboardPublisher.dadosAlterados();
         return ResponseEntity.noContent().build();
     }
 
@@ -66,7 +74,9 @@ public class ItemController {
                 .orElseThrow(() -> new ResourceNotFoundException("error.notfound.item"));
         item.setLibraryId(request.targetLibraryId());
         item.setStatus(ItemStatus.IN_TRANSIT);
-        return ResponseEntity.ok(itemRepository.save(item));
+        Item saved = itemRepository.save(item);
+        dashboardPublisher.dadosAlterados();
+        return ResponseEntity.ok(saved);
     }
 
     @PostMapping("/{id}/receive")
@@ -74,7 +84,9 @@ public class ItemController {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("error.notfound.item"));
         item.setStatus(ItemStatus.AVAILABLE);
-        return ResponseEntity.ok(itemRepository.save(item));
+        Item saved = itemRepository.save(item);
+        dashboardPublisher.dadosAlterados();
+        return ResponseEntity.ok(saved);
     }
 
     @PostMapping("/{id}/withdraw")
@@ -82,7 +94,9 @@ public class ItemController {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("error.notfound.item"));
         item.setStatus(ItemStatus.WITHDRAWN);
-        return ResponseEntity.ok(itemRepository.save(item));
+        Item saved = itemRepository.save(item);
+        dashboardPublisher.dadosAlterados();
+        return ResponseEntity.ok(saved);
     }
 
     public record ItemRequest(UUID workId, UUID libraryId, String barcode, String callNumber) {}

@@ -2,6 +2,7 @@ package com.escola.biblioteca.security;
 
 import com.escola.biblioteca.model.AdminRole;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,14 +11,17 @@ public class AdminAuthenticationToken extends AbstractAuthenticationToken {
 
     private final String login;
     private final AdminRole role;
-    private final UUID institutionId;
+    private final List<UUID> allowedInstitutionIds;
+    private UUID currentInstitutionId;
 
-    public AdminAuthenticationToken(String login, AdminRole role, UUID institutionId,
+    public AdminAuthenticationToken(String login, AdminRole role, List<UUID> allowedInstitutionIds,
+                                    UUID currentInstitutionId,
                                     Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
         this.login = login;
         this.role = role;
-        this.institutionId = institutionId;
+        this.allowedInstitutionIds = allowedInstitutionIds;
+        this.currentInstitutionId = currentInstitutionId;
         setAuthenticated(true);
     }
 
@@ -39,8 +43,16 @@ public class AdminAuthenticationToken extends AbstractAuthenticationToken {
         return role;
     }
 
-    public UUID getInstitutionId() {
-        return institutionId;
+    public List<UUID> getAllowedInstitutionIds() {
+        return allowedInstitutionIds;
+    }
+
+    public UUID getCurrentInstitutionId() {
+        return currentInstitutionId;
+    }
+
+    public void setCurrentInstitutionId(UUID currentInstitutionId) {
+        this.currentInstitutionId = currentInstitutionId;
     }
 
     public boolean isGlobalAdmin() {

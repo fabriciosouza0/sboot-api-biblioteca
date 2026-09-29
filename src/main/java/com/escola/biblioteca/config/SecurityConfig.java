@@ -46,10 +46,16 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(eh -> eh
-                        .authenticationEntryPoint((request, response, ex) ->
-                                securityErrorWriter.write(request, response, HttpStatus.UNAUTHORIZED, "error.unauthorized"))
-                        .accessDeniedHandler((request, response, ex) ->
-                                securityErrorWriter.write(request, response, HttpStatus.FORBIDDEN, "error.accessdenied")))
+                        .authenticationEntryPoint((request, response, ex) -> {
+                            if (!response.isCommitted()) {
+                                securityErrorWriter.write(request, response, HttpStatus.UNAUTHORIZED, "error.unauthorized");
+                            }
+                        })
+                        .accessDeniedHandler((request, response, ex) -> {
+                            if (!response.isCommitted()) {
+                                securityErrorWriter.write(request, response, HttpStatus.FORBIDDEN, "error.accessdenied");
+                            }
+                        }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()

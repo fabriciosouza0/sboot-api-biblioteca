@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -138,7 +139,7 @@ class LoanServiceTest {
         loan.setPatronId(patronId);
         loan.setItemId(itemId);
         loan.setStatus(LoanStatus.ACTIVE);
-        loan.setDueAt(Instant.now().plusSeconds(3600));
+        loan.setDueAt(OffsetDateTime.now().plusSeconds(3600));
 
         when(loanRepository.findById(loan.getId())).thenReturn(Optional.of(loan));
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
@@ -160,7 +161,7 @@ class LoanServiceTest {
         loan.setPatronId(patronId);
         loan.setItemId(itemId);
         loan.setStatus(LoanStatus.ACTIVE);
-        loan.setDueAt(Instant.now().plusSeconds(3600));
+        loan.setDueAt(OffsetDateTime.now().plusSeconds(3600));
 
         when(loanRepository.findById(loan.getId())).thenReturn(Optional.of(loan));
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
@@ -191,7 +192,7 @@ class LoanServiceTest {
         loan.setPatronId(patronId);
         loan.setItemId(itemId);
         loan.setStatus(LoanStatus.ACTIVE);
-        loan.setDueAt(Instant.now().plusSeconds(3600));
+        loan.setDueAt(OffsetDateTime.now().plusSeconds(3600));
         loan.setRenewalCount(0);
 
         when(loanRepository.findById(loan.getId())).thenReturn(Optional.of(loan));
@@ -215,7 +216,7 @@ class LoanServiceTest {
         loan.setPatronId(patronId);
         loan.setItemId(itemId);
         loan.setStatus(LoanStatus.ACTIVE);
-        loan.setDueAt(Instant.now().plusSeconds(3600));
+        loan.setDueAt(OffsetDateTime.now().plusSeconds(3600));
         loan.setRenewalCount(2);
 
         when(loanRepository.findById(loan.getId())).thenReturn(Optional.of(loan));

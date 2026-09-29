@@ -1,8 +1,12 @@
 package com.escola.biblioteca.controller;
 
+import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.domain.model.Work;
+import com.escola.biblioteca.domain.repository.HoldRepository;
+import com.escola.biblioteca.domain.repository.ItemRepository;
 import com.escola.biblioteca.domain.repository.WorkRepository;
 import com.escola.biblioteca.domain.repository.query.WorkQueryRepository;
+import com.escola.biblioteca.dto.response.WorkDependenciesResponse;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
 import java.util.List;
 import java.util.UUID;
@@ -16,10 +20,18 @@ public class WorkController {
 
     private final WorkRepository workRepository;
     private final WorkQueryRepository workQueryRepository;
+    private final ItemRepository itemRepository;
+    private final HoldRepository holdRepository;
+    private final DashboardPublisher dashboardPublisher;
 
-    public WorkController(WorkRepository workRepository, WorkQueryRepository workQueryRepository) {
+    public WorkController(WorkRepository workRepository, WorkQueryRepository workQueryRepository,
+                          ItemRepository itemRepository, HoldRepository holdRepository,
+                          DashboardPublisher dashboardPublisher) {
         this.workRepository = workRepository;
         this.workQueryRepository = workQueryRepository;
+        this.itemRepository = itemRepository;
+        this.holdRepository = holdRepository;
+        this.dashboardPublisher = dashboardPublisher;
     }
 
     @GetMapping
@@ -42,7 +54,9 @@ public class WorkController {
         work.setCoverUrl(request.coverUrl());
         work.setDescription(request.description());
         work.marcarNovo();
-        return ResponseEntity.status(HttpStatus.CREATED).body(workRepository.save(work));
+        Work saved = workRepository.save(work);
+        dashboardPublisher.dadosAlterados();
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
@@ -58,13 +72,28 @@ public class WorkController {
         work.setCdu(request.cdu());
         work.setCoverUrl(request.coverUrl());
         work.setDescription(request.description());
-        return workRepository.save(work);
+        Work saved = workRepository.save(work);
+        dashboardPublisher.dadosAlterados();
+        return saved;
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(@PathVariable UUID institutionId, @PathVariable UUID id) {
+        List<WorkDependenciesResponse.ItemSummary> items = itemRepository.findDependencyItems(id);
+        List<WorkDependenciesResponse.HoldSummary> holds = holdRepository.findDependencyHolds(id);
+        if (!items.isEmpty() || !holds.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
         workRepository.deleteById(id);
+        dashboardPublisher.dadosAlterados();
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/dependencies")
+    public WorkDependenciesResponse dependencies(@PathVariable UUID institutionId, @PathVariable UUID id) {
+        return new WorkDependenciesResponse(
+                itemRepository.findDependencyItems(id),
+                holdRepository.findDependencyHolds(id));
     }
 
     @PostMapping("/enrich/{isbn13}")

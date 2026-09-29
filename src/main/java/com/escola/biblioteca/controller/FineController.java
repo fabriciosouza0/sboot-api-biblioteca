@@ -1,5 +1,6 @@
 package com.escola.biblioteca.controller;
 
+import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.domain.model.Fine;
 import com.escola.biblioteca.domain.repository.FineRepository;
 import com.escola.biblioteca.domain.service.FineService;
@@ -14,10 +15,13 @@ public class FineController {
 
     private final FineRepository fineRepository;
     private final FineService fineService;
+    private final DashboardPublisher dashboardPublisher;
 
-    public FineController(FineRepository fineRepository, FineService fineService) {
+    public FineController(FineRepository fineRepository, FineService fineService,
+                          DashboardPublisher dashboardPublisher) {
         this.fineRepository = fineRepository;
         this.fineService = fineService;
+        this.dashboardPublisher = dashboardPublisher;
     }
 
     @GetMapping
@@ -34,24 +38,31 @@ public class FineController {
     @PostMapping("/{fineId}/pay")
     public Fine pagar(@PathVariable UUID institutionId, @PathVariable UUID fineId,
                       @RequestBody PayRequest request) {
-        return fineService.pay(fineId, request.paymentRef(), request.amountCents());
+        Fine paid = fineService.pay(fineId, request.paymentRef(), request.amountCents());
+        dashboardPublisher.dadosAlterados();
+        return paid;
     }
 
     @PostMapping("/{fineId}/waive")
     public Fine isentar(@PathVariable UUID institutionId, @PathVariable UUID fineId,
                         @RequestBody WaiveRequest request) {
-        return fineService.waive(fineId, request.staffId(), request.reason());
+        Fine waived = fineService.waive(fineId, request.staffId(), request.reason());
+        dashboardPublisher.dadosAlterados();
+        return waived;
     }
 
     @PostMapping("/{fineId}/write-off")
     public Fine darBaixa(@PathVariable UUID institutionId, @PathVariable UUID fineId,
                          @RequestBody WaiveRequest request) {
-        return fineService.writeOff(fineId, request.staffId(), request.reason());
+        Fine writtenOff = fineService.writeOff(fineId, request.staffId(), request.reason());
+        dashboardPublisher.dadosAlterados();
+        return writtenOff;
     }
 
     @PostMapping("/patrons/{patronId}/recalculate-fines")
     public ResponseEntity<Void> recalcularSaldo(@PathVariable UUID institutionId, @PathVariable UUID patronId) {
         fineService.recalculateBalance(patronId);
+        dashboardPublisher.dadosAlterados();
         return ResponseEntity.ok().build();
     }
 

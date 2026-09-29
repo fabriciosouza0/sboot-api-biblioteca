@@ -160,20 +160,18 @@ public class AuthController {
             var all = new ArrayList<Institution>();
             institutionRepository.findAll().forEach(all::add);
             institutions = all.stream()
-                    .map(i -> new InstitutionSummary(i.getId(), i.getCode(), i.getName(), AdminRole.GLOBAL_ADMIN))
+                    .map(i -> new InstitutionSummary(i.getId(), i.getCode(), i.getName(),
+                            i.getSettings(), i.getCreatedAt() != null ? i.getCreatedAt().toString() : null,
+                            AdminRole.GLOBAL_ADMIN))
                     .toList();
         } else {
-            UUID institutionId = adminAuth.getInstitutionId();
-            if (institutionId != null) {
-                var inst = institutionRepository.findById(institutionId);
-                institutions = inst.map(i -> List.of(new InstitutionSummary(i.getId(), i.getCode(), i.getName(), AdminRole.INSTITUTION_ADMIN)))
-                        .orElse(List.of());
-            } else {
-                institutions = institutionRepository.findInstitutionsByAdmLogin(adminAuth.getLogin())
-                        .stream()
-                        .map(i -> new InstitutionSummary(i.getId(), i.getCode(), i.getName(), AdminRole.INSTITUTION_ADMIN))
-                        .toList();
-            }
+            List<UUID> allowedIds = adminAuth.getAllowedInstitutionIds();
+            institutions = java.util.stream.StreamSupport
+                    .stream(institutionRepository.findAllById(allowedIds).spliterator(), false)
+                    .map(i -> new InstitutionSummary(i.getId(), i.getCode(), i.getName(),
+                            i.getSettings(), i.getCreatedAt() != null ? i.getCreatedAt().toString() : null,
+                            AdminRole.INSTITUTION_ADMIN))
+                    .toList();
         }
 
         return ResponseEntity.ok(new MeResponse(adminAuth.getLogin(), adm.get().getNome(), adminAuth.getRole(), institutions));
@@ -182,7 +180,8 @@ public class AuthController {
     public record MeResponse(String login, String nome, AdminRole role,
                              List<InstitutionSummary> institutions) {}
 
-    public record InstitutionSummary(UUID id, String code, String name, AdminRole role) {}
+    public record InstitutionSummary(UUID id, String code, String name, String settings,
+                                     String createdAt, AdminRole role) {}
 
     private void setRefreshCookie(HttpServletResponse response, String refreshToken) {
         ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE, refreshToken)

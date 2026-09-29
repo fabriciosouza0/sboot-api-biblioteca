@@ -9,12 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-@Component
-public class RlsTransactionSynchronization {
+/**
+ * Fallback para cenários onde o RlsAspect não roda (ex: chamadas internas
+ * fora de proxy AOP). Usa a mesma conexão da transação via DataSourceUtils.
+ */
+public class RlsTransactionSynchronization implements TransactionSynchronization {
 
     private static final Logger log = LoggerFactory.getLogger(RlsTransactionSynchronization.class);
 
@@ -24,25 +25,9 @@ public class RlsTransactionSynchronization {
         this.dataSource = dataSource;
     }
 
-    public void registerIfNeeded() {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void beforeCommit(boolean readOnly) {
-                    // No-op
-                }
-
-                @Override
-                public void afterCommit() {
-                    // No-op
-                }
-
-                @Override
-                public void beforeCompletion() {
-                    setRlsSessionVariables();
-                }
-            });
-        }
+    @Override
+    public void beforeCommit(boolean readOnly) {
+        setRlsSessionVariables();
     }
 
     private void setRlsSessionVariables() {
@@ -61,7 +46,7 @@ public class RlsTransactionSynchronization {
                 execute(conn, "SET LOCAL app.is_global_admin = 'true'");
                 execute(conn, "SET LOCAL app.current_institution_id = ''");
             } else {
-                UUID institutionId = adminAuth.getInstitutionId();
+                UUID institutionId = adminAuth.getCurrentInstitutionId();
                 if (institutionId != null) {
                     execute(conn, "SET LOCAL app.is_global_admin = 'false'");
                     execute(conn, "SET LOCAL app.current_institution_id = '" + institutionId + "'");

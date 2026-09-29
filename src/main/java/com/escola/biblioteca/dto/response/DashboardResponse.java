@@ -15,4 +15,8 @@ public record DashboardResponse(
         long totalLibraries,
         long inTransitItems,
         long inRepairItems) {
+
+    public static DashboardResponse empty() {
+        return new DashboardResponse(0, 0, 0, 0, 0, 0, 0, 0, 0, "R$ 0,00", 0, 0, 0, 0);
+    }
 }

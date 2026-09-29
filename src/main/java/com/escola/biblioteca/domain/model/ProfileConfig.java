@@ -56,5 +56,7 @@ public class ProfileConfig implements Persistable<UUID> {
 
     public void marcarNovo() {
         this.novo = true;
+        this.createdAt = OffsetDateTime.now();
+        this.updatedAt = OffsetDateTime.now();
     }
 }

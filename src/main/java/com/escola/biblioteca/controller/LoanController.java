@@ -1,5 +1,6 @@
 package com.escola.biblioteca.controller;
 
+import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.domain.model.Loan;
 import com.escola.biblioteca.domain.model.LoanStatus;
 import com.escola.biblioteca.domain.repository.LoanRepository;
@@ -17,10 +18,13 @@ public class LoanController {
 
     private final LoanRepository loanRepository;
     private final LoanService loanService;
+    private final DashboardPublisher dashboardPublisher;
 
-    public LoanController(LoanRepository loanRepository, LoanService loanService) {
+    public LoanController(LoanRepository loanRepository, LoanService loanService,
+                          DashboardPublisher dashboardPublisher) {
         this.loanRepository = loanRepository;
         this.loanService = loanService;
+        this.dashboardPublisher = dashboardPublisher;
     }
 
     @GetMapping
@@ -37,6 +41,7 @@ public class LoanController {
     @PostMapping
     public ResponseEntity<Loan> criar(@PathVariable UUID institutionId, @RequestBody LoanRequest request) {
         Loan loan = loanService.checkout(request.patronId(), request.itemId(), request.libraryId());
+        dashboardPublisher.dadosAlterados();
         return ResponseEntity.status(HttpStatus.CREATED).body(loan);
     }
 
@@ -47,12 +52,15 @@ public class LoanController {
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new ResourceNotFoundException("error.notfound.loan"));
         Loan returned = loanService.returnLoan(loanId, loan.getLibraryId(), condition);
+        dashboardPublisher.dadosAlterados();
         return ResponseEntity.ok(returned);
     }
 
     @PostMapping("/{loanId}/renew")
     public Loan renovar(@PathVariable UUID institutionId, @PathVariable UUID loanId) {
-        return loanService.renew(loanId);
+        Loan renewed = loanService.renew(loanId);
+        dashboardPublisher.dadosAlterados();
+        return renewed;
     }
 
     public record LoanRequest(UUID patronId, UUID itemId, UUID libraryId) {}

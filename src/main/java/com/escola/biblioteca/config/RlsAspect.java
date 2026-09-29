@@ -5,6 +5,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.annotation.Order;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,14 +36,17 @@ public class RlsAspect {
             return;
         }
 
-        Connection conn = null;
+        Connection conn = DataSourceUtils.getConnection(dataSource);
+        if (conn == null) {
+            return;
+        }
+
         try {
-            conn = dataSource.getConnection();
             if (adminAuth.isGlobalAdmin()) {
                 execute(conn, "SET LOCAL app.is_global_admin = 'true'");
                 execute(conn, "SET LOCAL app.current_institution_id = ''");
             } else {
-                UUID institutionId = adminAuth.getInstitutionId();
+                UUID institutionId = adminAuth.getCurrentInstitutionId();
                 if (institutionId != null) {
                     execute(conn, "SET LOCAL app.is_global_admin = 'false'");
                     execute(conn, "SET LOCAL app.current_institution_id = '" + institutionId + "'");
@@ -52,10 +56,6 @@ public class RlsAspect {
         } catch (SQLException e) {
             // Log but don't fail the transaction
             System.err.println("RLS aspect error: " + e.getMessage());
-        } finally {
-            if (conn != null) {
-                try { conn.close(); } catch (SQLException ignored) {}
-            }
         }
     }
 

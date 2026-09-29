@@ -1,5 +1,6 @@
 package com.escola.biblioteca.controller;
 
+import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.domain.model.Patron;
 import com.escola.biblioteca.domain.model.PatronProfile;
 import com.escola.biblioteca.domain.repository.PatronRepository;
@@ -17,10 +18,13 @@ public class PatronController {
 
     private final PatronRepository patronRepository;
     private final PatronQueryRepository patronQueryRepository;
+    private final DashboardPublisher dashboardPublisher;
 
-    public PatronController(PatronRepository patronRepository, PatronQueryRepository patronQueryRepository) {
+    public PatronController(PatronRepository patronRepository, PatronQueryRepository patronQueryRepository,
+                            DashboardPublisher dashboardPublisher) {
         this.patronRepository = patronRepository;
         this.patronQueryRepository = patronQueryRepository;
+        this.dashboardPublisher = dashboardPublisher;
     }
 
     @GetMapping
@@ -41,7 +45,9 @@ public class PatronController {
         patron.setPhone(request.phone());
         patron.setProfile(PatronProfile.valueOf(request.profile()));
         patron.marcarNovo();
-        return ResponseEntity.status(HttpStatus.CREATED).body(patronRepository.save(patron));
+        Patron saved = patronRepository.save(patron);
+        dashboardPublisher.dadosAlterados();
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
@@ -52,12 +58,15 @@ public class PatronController {
         patron.setName(request.name());
         patron.setPhone(request.phone());
         patron.setProfile(PatronProfile.valueOf(request.profile()));
-        return patronRepository.save(patron);
+        Patron saved = patronRepository.save(patron);
+        dashboardPublisher.dadosAlterados();
+        return saved;
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(@PathVariable UUID institutionId, @PathVariable UUID id) {
         patronRepository.deleteById(id);
+        dashboardPublisher.dadosAlterados();
         return ResponseEntity.noContent().build();
     }
 

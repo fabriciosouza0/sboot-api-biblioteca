@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -71,7 +72,7 @@ class FineServiceTest {
         loan.setId(loanId);
         loan.setPatronId(patronId);
         loan.setStatus(LoanStatus.OVERDUE);
-        loan.setDueAt(Instant.now().minusSeconds(86400 * 5)); // 5 days ago
+        loan.setDueAt(OffsetDateTime.now().minusSeconds(86400 * 5)); // 5 days ago
 
         config = new ProfileConfig();
         config.setFineRateCents(50);
@@ -99,7 +100,7 @@ class FineServiceTest {
 
     @Test
     void assessOverdue_shouldCapAtMaxFine() {
-        loan.setDueAt(Instant.now().minusSeconds(86400 * 200)); // 200 days ago -> 10000 cents, capped at 5000
+        loan.setDueAt(OffsetDateTime.now().minusSeconds(86400 * 200)); // 200 days ago -> 10000 cents, capped at 5000
         when(loanRepository.findById(loanId)).thenReturn(Optional.of(loan));
         when(patronService.findById(patronId)).thenReturn(patron);
         when(profileConfigRepository.findByInstitutionIdAndProfile(patron.getInstitutionId(), patron.getProfile()))
@@ -124,7 +125,7 @@ class FineServiceTest {
 
     @Test
     void assessOverdue_shouldFail_whenDaysOverdueZero() {
-        loan.setDueAt(Instant.now().plusSeconds(3600)); // Due in future
+        loan.setDueAt(OffsetDateTime.now().plusSeconds(3600)); // Due in future
         when(loanRepository.findById(loanId)).thenReturn(Optional.of(loan));
         when(patronService.findById(patronId)).thenReturn(patron);
         when(profileConfigRepository.findByInstitutionIdAndProfile(patron.getInstitutionId(), patron.getProfile()))

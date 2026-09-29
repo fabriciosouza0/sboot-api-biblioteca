@@ -1,5 +1,6 @@
 package com.escola.biblioteca.controller;
 
+import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.domain.model.ProfileConfig;
 import com.escola.biblioteca.domain.model.PatronProfile;
 import com.escola.biblioteca.domain.repository.ProfileConfigRepository;
@@ -15,9 +16,12 @@ import org.springframework.web.bind.annotation.*;
 public class ProfileConfigController {
 
     private final ProfileConfigRepository profileConfigRepository;
+    private final DashboardPublisher dashboardPublisher;
 
-    public ProfileConfigController(ProfileConfigRepository profileConfigRepository) {
+    public ProfileConfigController(ProfileConfigRepository profileConfigRepository,
+                                   DashboardPublisher dashboardPublisher) {
         this.profileConfigRepository = profileConfigRepository;
+        this.dashboardPublisher = dashboardPublisher;
     }
 
     @GetMapping
@@ -41,7 +45,9 @@ public class ProfileConfigController {
         config.setFineRateCents(request.fineRateCents());
         config.setFineCapCents(request.fineCapCents());
         config.marcarNovo();
-        return ResponseEntity.status(HttpStatus.CREATED).body(profileConfigRepository.save(config));
+        ProfileConfig saved = profileConfigRepository.save(config);
+        dashboardPublisher.dadosAlterados();
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
@@ -55,12 +61,15 @@ public class ProfileConfigController {
         config.setHoldLimit(request.holdLimit());
         config.setFineRateCents(request.fineRateCents());
         config.setFineCapCents(request.fineCapCents());
-        return profileConfigRepository.save(config);
+        ProfileConfig saved = profileConfigRepository.save(config);
+        dashboardPublisher.dadosAlterados();
+        return saved;
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(@PathVariable UUID institutionId, @PathVariable UUID id) {
         profileConfigRepository.deleteById(id);
+        dashboardPublisher.dadosAlterados();
         return ResponseEntity.noContent().build();
     }
 

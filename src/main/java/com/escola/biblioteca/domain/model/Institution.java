@@ -44,5 +44,6 @@ public class Institution implements Persistable<UUID> {
 
     public void marcarNovo() {
         this.novo = true;
+        this.createdAt = OffsetDateTime.now();
     }
 }

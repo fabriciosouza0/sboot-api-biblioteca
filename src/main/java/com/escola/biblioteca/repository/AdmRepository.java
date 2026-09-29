@@ -21,4 +21,7 @@ public interface AdmRepository extends CrudRepository<Adm, Integer> {
 
     @Query("SELECT ai.institution_id FROM adm_institution ai WHERE ai.adm_codigo = :codigo LIMIT 1")
     Optional<UUID> findFirstInstitutionIdByAdmCodigo(@Param("codigo") Integer codigo);
+
+    @Query("SELECT ai.institution_id FROM adm_institution ai WHERE ai.adm_codigo = :codigo")
+    List<UUID> findInstitutionIdsByAdmCodigo(@Param("codigo") Integer codigo);
 }

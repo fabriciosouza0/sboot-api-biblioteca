@@ -1,5 +1,6 @@
 package com.escola.biblioteca.controller;
 
+import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.domain.model.Library;
 import com.escola.biblioteca.domain.repository.LibraryRepository;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
@@ -14,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 public class LibraryController {
 
     private final LibraryRepository libraryRepository;
+    private final DashboardPublisher dashboardPublisher;
 
-    public LibraryController(LibraryRepository libraryRepository) {
+    public LibraryController(LibraryRepository libraryRepository, DashboardPublisher dashboardPublisher) {
         this.libraryRepository = libraryRepository;
+        this.dashboardPublisher = dashboardPublisher;
     }
 
     @GetMapping
@@ -31,7 +34,9 @@ public class LibraryController {
         library.setName(request.name());
         library.setIsCentral(request.isCentral());
         library.marcarNovo();
-        return ResponseEntity.status(HttpStatus.CREATED).body(libraryRepository.save(library));
+        Library saved = libraryRepository.save(library);
+        dashboardPublisher.dadosAlterados();
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PutMapping("/{id}")
@@ -40,12 +45,15 @@ public class LibraryController {
                 .orElseThrow(() -> new ResourceNotFoundException("error.notfound.library"));
         library.setName(request.name());
         library.setIsCentral(request.isCentral());
-        return libraryRepository.save(library);
+        Library saved = libraryRepository.save(library);
+        dashboardPublisher.dadosAlterados();
+        return saved;
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(@PathVariable UUID institutionId, @PathVariable UUID id) {
         libraryRepository.deleteById(id);
+        dashboardPublisher.dadosAlterados();
         return ResponseEntity.noContent().build();
     }
 

@@ -21,7 +21,7 @@ public class RlsFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth instanceof AdminAuthenticationToken adminAuth) {
-            request.setAttribute("rls.institutionId", adminAuth.getInstitutionId());
+            request.setAttribute("rls.institutionId", adminAuth.getCurrentInstitutionId());
             request.setAttribute("rls.isGlobalAdmin", adminAuth.isGlobalAdmin());
         }
         filterChain.doFilter(request, response);
