@@ -9,7 +9,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Table("loan")
@@ -29,11 +29,11 @@ public class Loan implements Persistable<UUID> {
 
     private LoanStatus status = LoanStatus.ACTIVE;
 
-    private Instant checkedOutAt;
+    private OffsetDateTime checkedOutAt;
 
-    private Instant dueAt;
+    private OffsetDateTime dueAt;
 
-    private Instant returnedAt;
+    private OffsetDateTime returnedAt;
 
     private UUID returnedLibraryId;
 
@@ -42,9 +42,9 @@ public class Loan implements Persistable<UUID> {
     @Version
     private Long version = 0L;
 
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
-    private Instant updatedAt;
+    private OffsetDateTime updatedAt;
 
     @Transient
     private boolean novo;

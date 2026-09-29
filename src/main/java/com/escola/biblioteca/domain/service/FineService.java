@@ -16,7 +16,7 @@ import com.escola.biblioteca.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
@@ -44,7 +44,7 @@ public class FineService {
         var config = profileConfigRepository.findByInstitutionIdAndProfile(patron.getInstitutionId(), patron.getProfile())
                 .orElseThrow(() -> new IllegalStateException("Perfil não configurado"));
 
-        long daysOverdue = ChronoUnit.DAYS.between(loan.getDueAt().truncatedTo(ChronoUnit.DAYS), Instant.now().truncatedTo(ChronoUnit.DAYS));
+        long daysOverdue = ChronoUnit.DAYS.between(loan.getDueAt().truncatedTo(ChronoUnit.DAYS), OffsetDateTime.now().truncatedTo(ChronoUnit.DAYS));
         if (daysOverdue <= 0) {
             throw new BusinessException("error.loan.not.overdue");
         }
@@ -58,7 +58,7 @@ public class FineService {
         fine.setAmountCents(amountCents);
         fine.setBalanceCents(amountCents);
         fine.setStatus(FineStatus.PENDING);
-        fine.setAssessedAt(Instant.now());
+        fine.setAssessedAt(OffsetDateTime.now());
         fine.setReason("Atraso de %d dia(s)".formatted(daysOverdue));
         fine.marcarNovo();
 
@@ -81,7 +81,7 @@ public class FineService {
         fine.setAmountCents(replacementCostCents);
         fine.setBalanceCents(replacementCostCents);
         fine.setStatus(FineStatus.PENDING);
-        fine.setAssessedAt(Instant.now());
+        fine.setAssessedAt(OffsetDateTime.now());
         fine.setReason("Exemplar perdido");
         fine.marcarNovo();
 
@@ -104,7 +104,7 @@ public class FineService {
         fine.setAmountCents(damagePercent);
         fine.setBalanceCents(damagePercent);
         fine.setStatus(FineStatus.PENDING);
-        fine.setAssessedAt(Instant.now());
+        fine.setAssessedAt(OffsetDateTime.now());
         fine.setReason("Dano ao exemplar (%d%%)".formatted(damagePercent));
         fine.marcarNovo();
 
@@ -123,7 +123,7 @@ public class FineService {
         fine.setAmountCents(amountCents);
         fine.setBalanceCents(amountCents);
         fine.setStatus(FineStatus.PENDING);
-        fine.setAssessedAt(Instant.now());
+        fine.setAssessedAt(OffsetDateTime.now());
         fine.setReason(reason);
         fine.marcarNovo();
 
@@ -153,7 +153,7 @@ public class FineService {
         fine.setBalanceCents(newBalance);
         if (newBalance == 0) {
             fine.setStatus(FineStatus.PAID);
-            fine.setPaidAt(Instant.now());
+            fine.setPaidAt(OffsetDateTime.now());
         } else {
             fine.setStatus(FineStatus.PARTIAL);
         }
@@ -175,7 +175,7 @@ public class FineService {
 
         fine.setBalanceCents(0);
         fine.setStatus(FineStatus.WAIVED);
-        fine.setWaivedAt(Instant.now());
+        fine.setWaivedAt(OffsetDateTime.now());
         fine.setReason(reason + " (isento por " + staffId + ")");
 
         Fine saved = fineRepository.save(fine);
@@ -195,7 +195,7 @@ public class FineService {
 
         fine.setBalanceCents(0);
         fine.setStatus(FineStatus.WRITTEN_OFF);
-        fine.setWaivedAt(Instant.now());
+        fine.setWaivedAt(OffsetDateTime.now());
         fine.setReason(reason + " (baixa contábil por " + staffId + ")");
 
         Fine saved = fineRepository.save(fine);
@@ -236,6 +236,7 @@ public class FineService {
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
         event.setPayload(com.escola.biblioteca.util.JsonUtil.toJson(payload));
+        event.setCreatedAt(java.time.OffsetDateTime.now());
         event.marcarNovo();
         outboxEventRepository.save(event);
     }

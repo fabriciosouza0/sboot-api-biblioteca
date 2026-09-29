@@ -9,7 +9,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Table("fine")
@@ -33,20 +33,20 @@ public class Fine implements Persistable<UUID> {
 
     private FineStatus status = FineStatus.PENDING;
 
-    private Instant assessedAt;
+    private OffsetDateTime assessedAt;
 
-    private Instant paidAt;
+    private OffsetDateTime paidAt;
 
-    private Instant waivedAt;
+    private OffsetDateTime waivedAt;
 
     private String reason;
 
     @Version
     private Long version = 0L;
 
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
-    private Instant updatedAt;
+    private OffsetDateTime updatedAt;
 
     @Transient
     private boolean novo;

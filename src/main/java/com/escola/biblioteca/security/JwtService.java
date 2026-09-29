@@ -1,5 +1,6 @@
 package com.escola.biblioteca.security;
 
+import com.escola.biblioteca.model.AdminRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -7,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -38,11 +40,13 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
-    public String generateAccessToken(String login) {
+    public String generateAccessToken(String login, AdminRole role, UUID institutionId) {
         Date now = new Date();
         return Jwts.builder()
                 .subject(login)
                 .claim("type", "access")
+                .claim("role", role.name())
+                .claim("institutionId", institutionId != null ? institutionId.toString() : null)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + expirationMs))
                 .signWith(keys.get(0))
@@ -59,6 +63,16 @@ public class JwtService {
 
     public String extractLogin(String token) {
         return parseWithAnyKey(token).getSubject();
+    }
+
+    public AdminRole extractRole(String token) {
+        String roleStr = parseWithAnyKey(token).get("role", String.class);
+        return roleStr != null ? AdminRole.valueOf(roleStr) : AdminRole.INSTITUTION_ADMIN;
+    }
+
+    public UUID extractInstitutionId(String token) {
+        String instStr = parseWithAnyKey(token).get("institutionId", String.class);
+        return instStr != null ? UUID.fromString(instStr) : null;
     }
 
     private SecretKey resolveOptional(String secret) {

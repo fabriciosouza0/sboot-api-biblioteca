@@ -1,9 +1,9 @@
 package com.escola.biblioteca.controller;
 
 import com.escola.biblioteca.domain.model.Hold;
-import com.escola.biblioteca.domain.model.HoldStatus;
 import com.escola.biblioteca.domain.repository.HoldRepository;
 import com.escola.biblioteca.domain.service.HoldService;
+import com.escola.biblioteca.exception.ResourceNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -14,23 +14,18 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/institutions/{institutionId}/holds")
 public class HoldController {
 
-    private final HoldService holdService;
     private final HoldRepository holdRepository;
+    private final HoldService holdService;
 
-    public HoldController(HoldService holdService, HoldRepository holdRepository) {
-        this.holdService = holdService;
+    public HoldController(HoldRepository holdRepository, HoldService holdService) {
         this.holdRepository = holdRepository;
+        this.holdService = holdService;
     }
 
     @GetMapping
-    public List<Hold> listar(@PathVariable UUID institutionId,
-                             @RequestParam(required = false) String term,
-                             @RequestParam(required = false) HoldStatus status) {
+    public List<Hold> listar(@PathVariable UUID institutionId) {
         var all = new java.util.ArrayList<Hold>();
         holdRepository.findAll().forEach(all::add);
-        if (status != null) {
-            all.removeIf(h -> h.getStatus() != status);
-        }
         return all;
     }
 
@@ -40,20 +35,20 @@ public class HoldController {
         return ResponseEntity.status(HttpStatus.CREATED).body(hold);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancelar(@PathVariable UUID institutionId, @PathVariable UUID id) {
-        holdService.cancelHold(id);
+    @DeleteMapping("/{holdId}")
+    public ResponseEntity<Void> cancelar(@PathVariable UUID institutionId, @PathVariable UUID holdId) {
+        holdService.cancelHold(holdId);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{id}/fulfill")
-    public Hold cumprir(@PathVariable UUID institutionId, @PathVariable UUID id) {
-        return holdService.fulfillHold(id);
+    @PostMapping("/{holdId}/fulfill")
+    public Hold cumprir(@PathVariable UUID institutionId, @PathVariable UUID holdId) {
+        return holdService.fulfillHold(holdId);
     }
 
     @PostMapping("/expire")
     public ResponseEntity<Void> expirar(@PathVariable UUID institutionId) {
-        // TODO: implement HoldService.expireHolds()
+        // TODO: Implement hold expiration scheduler
         return ResponseEntity.ok().build();
     }
 

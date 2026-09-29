@@ -141,6 +141,7 @@ public class CatalogService {
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
         event.setPayload(com.escola.biblioteca.util.JsonUtil.toJson(payload));
+        event.setCreatedAt(java.time.OffsetDateTime.now());
         event.marcarNovo();
         outboxEventRepository.save(event);
     }

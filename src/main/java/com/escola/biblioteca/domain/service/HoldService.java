@@ -11,7 +11,7 @@ import com.escola.biblioteca.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +50,7 @@ public class HoldService {
         hold.setLibraryId(libraryId);
         hold.setStatus(HoldStatus.WAITING);
         hold.setPosition(position);
-        hold.setPlacedAt(Instant.now());
+        hold.setPlacedAt(OffsetDateTime.now());
         hold.marcarNovo();
 
         Hold saved = holdRepository.save(hold);
@@ -68,7 +68,7 @@ public class HoldService {
         }
 
         hold.setStatus(HoldStatus.CANCELLED);
-        hold.setCancelledAt(Instant.now());
+        hold.setCancelledAt(OffsetDateTime.now());
         holdRepository.save(hold);
 
         // Reorder positions for remaining waiting holds
@@ -86,7 +86,7 @@ public class HoldService {
         }
 
         hold.setStatus(HoldStatus.FULFILLED);
-        hold.setFulfilledAt(Instant.now());
+        hold.setFulfilledAt(OffsetDateTime.now());
         holdRepository.save(hold);
 
         // Trigger next in queue
@@ -102,7 +102,7 @@ public class HoldService {
 //        List<Hold> expired = holdRepository.findReadyExpired();
 //        for (Hold hold : expired) {
 //            hold.setStatus(HoldStatus.EXPIRED);
-//            hold.setCancelledAt(Instant.now());
+//            hold.setCancelledAt(OffsetDateTime.now());
 //            holdRepository.save(hold);
 //            reorderPositions(hold.getWorkId(), hold.getLibraryId());
 //            publishEvent(hold.getId(), "HoldExpired", hold);
@@ -114,8 +114,8 @@ public class HoldService {
 
     private void notifyReady(Hold hold) {
         hold.setStatus(HoldStatus.READY);
-        hold.setReadyAt(Instant.now());
-        hold.setExpiresAt(Instant.now().plus(48, ChronoUnit.HOURS));
+        hold.setReadyAt(OffsetDateTime.now());
+        hold.setExpiresAt(OffsetDateTime.now().plus(48, ChronoUnit.HOURS));
         holdRepository.save(hold);
         publishEvent(hold.getId(), "HoldReady", hold);
     }
@@ -134,6 +134,7 @@ public class HoldService {
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
         event.setPayload(com.escola.biblioteca.util.JsonUtil.toJson(payload));
+        event.setCreatedAt(java.time.OffsetDateTime.now());
         event.marcarNovo();
         outboxEventRepository.save(event);
     }

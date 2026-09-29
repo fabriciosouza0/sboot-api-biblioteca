@@ -54,8 +54,8 @@ public class ItemQueryRepository {
         item.setCallNumber(rs.getString("call_number"));
         item.setStatus(ItemStatus.valueOf(rs.getString("status")));
         item.setVersion(rs.getLong("version"));
-        item.setCreatedAt(rs.getObject("created_at", java.time.Instant.class));
-        item.setUpdatedAt(rs.getObject("updated_at", java.time.Instant.class));
+        item.setCreatedAt(rs.getObject("created_at", java.time.OffsetDateTime.class));
+        item.setUpdatedAt(rs.getObject("updated_at", java.time.OffsetDateTime.class));
         return item;
     }
 }

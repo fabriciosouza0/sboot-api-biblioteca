@@ -8,7 +8,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Table("outbox_event")
@@ -30,9 +30,9 @@ public class OutboxEvent implements Persistable<UUID> {
 
     private String metadata = "{}";
 
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
-    private Instant processedAt;
+    private OffsetDateTime processedAt;
 
     @Transient
     private boolean novo;

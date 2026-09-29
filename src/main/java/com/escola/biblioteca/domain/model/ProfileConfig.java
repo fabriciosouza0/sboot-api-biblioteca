@@ -9,7 +9,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Table("profile_config")
@@ -37,9 +37,9 @@ public class ProfileConfig implements Persistable<UUID> {
 
     private Integer fineCapCents = 5000;
 
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
-    private Instant updatedAt;
+    private OffsetDateTime updatedAt;
 
     @Transient
     private boolean novo;

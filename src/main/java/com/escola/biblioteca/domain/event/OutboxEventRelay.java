@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +40,7 @@ public class OutboxEventRelay {
                             event.getEventType(), event.getPayload(), Map.of());
                 }
 
-                event.setProcessedAt(Instant.now());
+                event.setProcessedAt(OffsetDateTime.now());
                 outboxEventRepository.save(event);
             } catch (Exception e) {
                 log.error("Erro ao processar outbox event id={}: {}", event.getId(), e.getMessage(), e);

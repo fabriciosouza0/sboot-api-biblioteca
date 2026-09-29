@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.util.UUID;
+
 @Table("adms")
 @Getter
 @Setter
@@ -20,4 +22,8 @@ public class Adm {
     private String senha;
 
     private String nome;
+
+    private AdminRole role;
+
+    private UUID institutionId;
 }

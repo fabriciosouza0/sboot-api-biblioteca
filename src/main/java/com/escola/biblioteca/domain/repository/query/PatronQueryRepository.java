@@ -22,7 +22,7 @@ public class PatronQueryRepository {
         String sql = """
             SELECT p.id, p.institution_id, p.external_id, p.name, p.phone, p.profile, p.status, p.fine_balance, p.version, p.created_at, p.updated_at
             FROM patron p
-            WHERE p.institution_id = :institutionId::text AND p.external_id = :externalId
+            WHERE p.institution_id = :institutionId AND p.external_id = :externalId
             """;
         return jdbcClient.sql(sql)
                 .param("institutionId", institutionId)
@@ -36,7 +36,7 @@ public class PatronQueryRepository {
             SELECT p.id, p.institution_id, p.external_id, p.name, p.phone, p.profile, p.status, p.fine_balance, p.version, p.created_at, p.updated_at
             FROM patron p
             WHERE p.institution_id = :institutionId
-              AND (:term IS NULL OR to_tsvector('portuguese', p.name) @@ websearch_to_tsquery('portuguese', :term || ':*'))
+              AND (:term::text IS NULL OR to_tsvector('portuguese', p.name) @@ websearch_to_tsquery('portuguese', :term::text || ':*'))
             ORDER BY p.name ASC
             """;
         String param = blankToNull(term);
@@ -58,8 +58,8 @@ public class PatronQueryRepository {
         patron.setStatus(com.escola.biblioteca.domain.model.PatronStatus.valueOf(rs.getString("status")));
         patron.setFineBalance((Integer) rs.getObject("fine_balance"));
         patron.setVersion(rs.getLong("version"));
-        patron.setCreatedAt(rs.getObject("created_at", java.time.Instant.class));
-        patron.setUpdatedAt(rs.getObject("updated_at", java.time.Instant.class));
+        patron.setCreatedAt(rs.getObject("created_at", java.time.OffsetDateTime.class));
+        patron.setUpdatedAt(rs.getObject("updated_at", java.time.OffsetDateTime.class));
         return patron;
     }
 

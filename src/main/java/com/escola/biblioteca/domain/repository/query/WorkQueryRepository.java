@@ -23,7 +23,7 @@ public class WorkQueryRepository {
             SELECT w.id, w.institution_id, w.isbn13, w.title, w.authors, w.publisher, w.published_year, w.edition, w.cdu, w.cover_url, w.description, w.version, w.created_at, w.updated_at
             FROM work w
             WHERE w.institution_id = :institutionId
-              AND (:term IS NULL OR to_tsvector('portuguese', w.title) @@ websearch_to_tsquery('portuguese', :term || ':*'))
+              AND (:term::text IS NULL OR to_tsvector('portuguese', w.title) @@ websearch_to_tsquery('portuguese', :term::text || ':*'))
             ORDER BY w.title ASC
             """;
         String param = blankToNull(term);
@@ -38,7 +38,7 @@ public class WorkQueryRepository {
         String sql = """
             SELECT w.id, w.institution_id, w.isbn13, w.title, w.authors, w.publisher, w.published_year, w.edition, w.cdu, w.cover_url, w.description, w.version, w.created_at, w.updated_at
             FROM work w
-            WHERE w.institution_id = :institutionId::text AND w.isbn13 = :isbn13
+            WHERE w.institution_id = :institutionId AND w.isbn13 = :isbn13
             """;
         return jdbcClient.sql(sql)
                 .param("institutionId", institutionId)
@@ -61,8 +61,8 @@ public class WorkQueryRepository {
         work.setCoverUrl(rs.getString("cover_url"));
         work.setDescription(rs.getString("description"));
         work.setVersion(rs.getLong("version"));
-        work.setCreatedAt(rs.getObject("created_at", java.time.Instant.class));
-        work.setUpdatedAt(rs.getObject("updated_at", java.time.Instant.class));
+        work.setCreatedAt(rs.getObject("created_at", java.time.OffsetDateTime.class));
+        work.setUpdatedAt(rs.getObject("updated_at", java.time.OffsetDateTime.class));
         return work;
     }
 

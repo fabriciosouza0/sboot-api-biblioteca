@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -39,6 +40,7 @@ public class InstitutionController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('GLOBAL_ADMIN')")
     public ResponseEntity<Institution> criar(@RequestBody InstitutionRequest request) {
         if (institutionRepository.findByCode(request.code()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -52,6 +54,7 @@ public class InstitutionController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GLOBAL_ADMIN')")
     public Institution atualizar(@PathVariable UUID id, @RequestBody InstitutionRequest request) {
         Institution institution = institutionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("error.notfound.institution"));
@@ -60,6 +63,7 @@ public class InstitutionController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GLOBAL_ADMIN')")
     public ResponseEntity<Void> remover(@PathVariable UUID id) {
         institutionRepository.deleteById(id);
         return ResponseEntity.noContent().build();

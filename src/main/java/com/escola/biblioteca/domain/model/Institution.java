@@ -9,7 +9,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Table("institution")
@@ -27,7 +27,7 @@ public class Institution implements Persistable<UUID> {
 
     private String settings = "{}";
 
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
     @Transient
     private boolean novo;

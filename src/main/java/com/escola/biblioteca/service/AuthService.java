@@ -3,11 +3,13 @@ package com.escola.biblioteca.service;
 import com.escola.biblioteca.dto.request.LoginRequest;
 import com.escola.biblioteca.dto.response.TokenPair;
 import com.escola.biblioteca.exception.BusinessException;
+import com.escola.biblioteca.model.AdminRole;
 import com.escola.biblioteca.model.Adm;
 import com.escola.biblioteca.model.RefreshToken;
 import com.escola.biblioteca.repository.AdmRepository;
 import com.escola.biblioteca.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -50,9 +52,14 @@ public class AuthService {
     }
 
     private TokenPair issueTokenPair(Adm adm, HttpServletRequest httpRequest) {
-        String access = jwtService.generateAccessToken(adm.getLogin());
+        AdminRole role = adm.getRole() != null ? adm.getRole() : AdminRole.INSTITUTION_ADMIN;
+        UUID institutionId = adm.getInstitutionId();
+        if (institutionId == null && role == AdminRole.INSTITUTION_ADMIN) {
+            institutionId = admRepository.findFirstInstitutionIdByAdmCodigo(adm.getCodigo()).orElse(null);
+        }
+        String access = jwtService.generateAccessToken(adm.getLogin(), role, institutionId);
         String refresh = refreshTokenService.issue(adm, httpRequest);
-        return new TokenPair(access, refresh, adm.getNome(), adm.getLogin());
+        return new TokenPair(access, refresh, adm.getNome(), adm.getLogin(), role, institutionId);
     }
 
     private Adm authenticate(LoginRequest request) {

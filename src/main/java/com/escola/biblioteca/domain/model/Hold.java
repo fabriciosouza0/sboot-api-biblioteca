@@ -9,7 +9,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Table("hold")
@@ -31,22 +31,22 @@ public class Hold implements Persistable<UUID> {
 
     private Integer position;
 
-    private Instant placedAt;
+    private OffsetDateTime placedAt;
 
-    private Instant readyAt;
+    private OffsetDateTime readyAt;
 
-    private Instant expiresAt;
+    private OffsetDateTime expiresAt;
 
-    private Instant fulfilledAt;
+    private OffsetDateTime fulfilledAt;
 
-    private Instant cancelledAt;
+    private OffsetDateTime cancelledAt;
 
     @Version
     private Long version = 0L;
 
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
-    private Instant updatedAt;
+    private OffsetDateTime updatedAt;
 
     private boolean readyExpired;
 

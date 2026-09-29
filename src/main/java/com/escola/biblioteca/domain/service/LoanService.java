@@ -14,7 +14,7 @@ import com.escola.biblioteca.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
@@ -52,8 +52,8 @@ public class LoanService {
         loan.setItemId(itemId);
         loan.setLibraryId(libraryId);
         loan.setStatus(LoanStatus.ACTIVE);
-        loan.setCheckedOutAt(Instant.now());
-        loan.setDueAt(Instant.now().plus(policy.getLoanDays(), ChronoUnit.DAYS));
+        loan.setCheckedOutAt(OffsetDateTime.now());
+        loan.setDueAt(OffsetDateTime.now().plus(policy.getLoanDays(), ChronoUnit.DAYS));
         loan.setRenewalCount(0);
         loan.marcarNovo();
 
@@ -78,7 +78,7 @@ public class LoanService {
                 .orElseThrow(() -> new ResourceNotFoundException("error.notfound.item"));
 
         loan.setStatus(LoanStatus.RETURNED);
-        loan.setReturnedAt(Instant.now());
+        loan.setReturnedAt(OffsetDateTime.now());
         loan.setReturnedLibraryId(libraryId);
 
         // Determine item status based on return condition
@@ -144,6 +144,7 @@ public class LoanService {
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
         event.setPayload(com.escola.biblioteca.util.JsonUtil.toJson(payload));
+        event.setCreatedAt(java.time.OffsetDateTime.now());
         event.marcarNovo();
         outboxEventRepository.save(event);
     }

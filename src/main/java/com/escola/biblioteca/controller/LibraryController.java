@@ -2,6 +2,7 @@ package com.escola.biblioteca.controller;
 
 import com.escola.biblioteca.domain.model.Library;
 import com.escola.biblioteca.domain.repository.LibraryRepository;
+import com.escola.biblioteca.exception.ResourceNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -19,15 +20,8 @@ public class LibraryController {
     }
 
     @GetMapping
-    public List<Library> listar(@PathVariable UUID institutionId,
-                                @RequestParam(required = false) String term) {
-        List<Library> libraries = libraryRepository.findByInstitutionId(institutionId);
-        if (term != null && !term.isBlank()) {
-            return libraries.stream()
-                    .filter(l -> l.getName().toLowerCase().contains(term.toLowerCase()))
-                    .toList();
-        }
-        return libraries;
+    public List<Library> listar(@PathVariable UUID institutionId) {
+        return libraryRepository.findByInstitutionId(institutionId);
     }
 
     @PostMapping
@@ -37,15 +31,13 @@ public class LibraryController {
         library.setName(request.name());
         library.setIsCentral(request.isCentral());
         library.marcarNovo();
-        Library saved = libraryRepository.save(library);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(libraryRepository.save(library));
     }
 
     @PutMapping("/{id}")
-    public Library atualizar(@PathVariable UUID institutionId, @PathVariable UUID id,
-                             @RequestBody LibraryRequest request) {
-        Library library = libraryRepository.findById(id).orElseThrow(() ->
-                new com.escola.biblioteca.exception.ResourceNotFoundException("error.notfound.library"));
+    public Library atualizar(@PathVariable UUID institutionId, @PathVariable UUID id, @RequestBody LibraryRequest request) {
+        Library library = libraryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("error.notfound.library"));
         library.setName(request.name());
         library.setIsCentral(request.isCentral());
         return libraryRepository.save(library);
@@ -57,5 +49,5 @@ public class LibraryController {
         return ResponseEntity.noContent().build();
     }
 
-    public record LibraryRequest(String name, Boolean isCentral) {}
+    public record LibraryRequest(String name, boolean isCentral) {}
 }

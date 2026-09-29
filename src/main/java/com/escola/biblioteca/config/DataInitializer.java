@@ -4,11 +4,15 @@ import com.escola.biblioteca.domain.model.Institution;
 import com.escola.biblioteca.domain.model.ProfileConfig;
 import com.escola.biblioteca.domain.repository.InstitutionRepository;
 import com.escola.biblioteca.domain.repository.ProfileConfigRepository;
-import java.time.Instant;
+import com.escola.biblioteca.model.AdminRole;
+import com.escola.biblioteca.model.Adm;
+import com.escola.biblioteca.repository.AdmRepository;
+import java.time.OffsetDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,14 +22,22 @@ public class DataInitializer {
 
     private static final String DEFAULT_CODE = "EEEP-JBL";
     private static final String DEFAULT_NAME = "E.E.E.P. Pe. João Bosco de Lima";
+    private static final String GLOBAL_ADMIN_LOGIN = "global-admin";
+    private static final String GLOBAL_ADMIN_PASSWORD = "Admin@123";
 
     private final InstitutionRepository institutionRepository;
     private final ProfileConfigRepository profileConfigRepository;
+    private final AdmRepository admRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(InstitutionRepository institutionRepository,
-                           ProfileConfigRepository profileConfigRepository) {
+                           ProfileConfigRepository profileConfigRepository,
+                           AdmRepository admRepository,
+                           PasswordEncoder passwordEncoder) {
         this.institutionRepository = institutionRepository;
         this.profileConfigRepository = profileConfigRepository;
+        this.admRepository = admRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -36,12 +48,13 @@ public class DataInitializer {
                     Institution inst = new Institution();
                     inst.setCode(DEFAULT_CODE);
                     inst.setName(DEFAULT_NAME);
-                    inst.setCreatedAt(Instant.now());
+                    inst.setCreatedAt(OffsetDateTime.now());
                     inst.marcarNovo();
                     return institutionRepository.save(inst);
                 });
 
         seedProfileConfigs(institution);
+        seedGlobalAdmin();
     }
 
     private void seedProfileConfigs(Institution institution) {
@@ -69,10 +82,23 @@ public class DataInitializer {
                         config.setHoldLimit(p.holdLimit());
                         config.setFineRateCents(p.fineRateCents());
                         config.setFineCapCents(p.fineCapCents());
-                        config.setCreatedAt(Instant.now());
+                        config.setCreatedAt(OffsetDateTime.now());
                         config.marcarNovo();
                         return profileConfigRepository.save(config);
                     });
+        }
+    }
+
+    private void seedGlobalAdmin() {
+        if (admRepository.findByLogin(GLOBAL_ADMIN_LOGIN).isEmpty()) {
+            log.info("Criando admin global: {}", GLOBAL_ADMIN_LOGIN);
+            Adm adm = new Adm();
+            adm.setLogin(GLOBAL_ADMIN_LOGIN);
+            adm.setSenha(passwordEncoder.encode(GLOBAL_ADMIN_PASSWORD));
+            adm.setNome("Global Admin");
+            adm.setRole(AdminRole.GLOBAL_ADMIN);
+            adm.setInstitutionId(null);
+            admRepository.save(adm);
         }
     }
 }

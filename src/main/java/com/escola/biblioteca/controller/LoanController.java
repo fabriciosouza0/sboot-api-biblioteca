@@ -4,6 +4,7 @@ import com.escola.biblioteca.domain.model.Loan;
 import com.escola.biblioteca.domain.model.LoanStatus;
 import com.escola.biblioteca.domain.repository.LoanRepository;
 import com.escola.biblioteca.domain.service.LoanService;
+import com.escola.biblioteca.exception.ResourceNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -14,42 +15,44 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/institutions/{institutionId}/loans")
 public class LoanController {
 
-    private final LoanService loanService;
     private final LoanRepository loanRepository;
+    private final LoanService loanService;
 
-    public LoanController(LoanService loanService, LoanRepository loanRepository) {
-        this.loanService = loanService;
+    public LoanController(LoanRepository loanRepository, LoanService loanService) {
         this.loanRepository = loanRepository;
+        this.loanService = loanService;
     }
 
     @GetMapping
     public List<Loan> listar(@PathVariable UUID institutionId,
-                             @RequestParam(required = false) String term,
-                             @RequestParam(required = false) LoanStatus status) {
+                             @RequestParam(required = false) UUID patronId) {
+        if (patronId != null) {
+            return loanService.findActiveByPatron(patronId);
+        }
         var all = new java.util.ArrayList<Loan>();
         loanRepository.findAll().forEach(all::add);
-        if (status != null) {
-            all.removeIf(l -> l.getStatus() != status);
-        }
         return all;
     }
 
     @PostMapping
-    public ResponseEntity<Loan> checkout(@PathVariable UUID institutionId, @RequestBody LoanRequest request) {
+    public ResponseEntity<Loan> criar(@PathVariable UUID institutionId, @RequestBody LoanRequest request) {
         Loan loan = loanService.checkout(request.patronId(), request.itemId(), request.libraryId());
         return ResponseEntity.status(HttpStatus.CREATED).body(loan);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Loan> devolver(@PathVariable UUID institutionId, @PathVariable UUID id,
+    @DeleteMapping("/{loanId}")
+    public ResponseEntity<Loan> devolver(@PathVariable UUID institutionId, @PathVariable UUID loanId,
                                          @RequestParam(defaultValue = "OK") String condition) {
-        Loan loan = loanService.returnLoan(id, null, condition);
-        return ResponseEntity.ok(loan);
+        // Find the library from the loan itself
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new ResourceNotFoundException("error.notfound.loan"));
+        Loan returned = loanService.returnLoan(loanId, loan.getLibraryId(), condition);
+        return ResponseEntity.ok(returned);
     }
 
-    @PostMapping("/{id}/renew")
-    public Loan renovar(@PathVariable UUID institutionId, @PathVariable UUID id) {
-        return loanService.renew(id);
+    @PostMapping("/{loanId}/renew")
+    public Loan renovar(@PathVariable UUID institutionId, @PathVariable UUID loanId) {
+        return loanService.renew(loanId);
     }
 
     public record LoanRequest(UUID patronId, UUID itemId, UUID libraryId) {}
