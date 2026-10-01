@@ -1,6 +1,6 @@
 package com.escola.biblioteca.dto.response;
 
-import com.escola.biblioteca.model.AdminRole;
+import com.escola.biblioteca.model.enums.AdminRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
 

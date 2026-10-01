@@ -1,13 +1,13 @@
 package com.escola.biblioteca.service;
 
-import com.escola.biblioteca.domain.repository.FineRepository;
-import com.escola.biblioteca.domain.repository.HoldRepository;
-import com.escola.biblioteca.domain.repository.InstitutionRepository;
-import com.escola.biblioteca.domain.repository.ItemRepository;
-import com.escola.biblioteca.domain.repository.LibraryRepository;
-import com.escola.biblioteca.domain.repository.LoanRepository;
-import com.escola.biblioteca.domain.repository.PatronRepository;
-import com.escola.biblioteca.domain.repository.WorkRepository;
+import com.escola.biblioteca.domain.circulation.repository.FineRepository;
+import com.escola.biblioteca.domain.circulation.repository.HoldRepository;
+import com.escola.biblioteca.domain.institution.repository.InstitutionRepository;
+import com.escola.biblioteca.domain.catalog.repository.ItemRepository;
+import com.escola.biblioteca.domain.catalog.repository.LibraryRepository;
+import com.escola.biblioteca.domain.circulation.repository.LoanRepository;
+import com.escola.biblioteca.domain.patron.repository.PatronRepository;
+import com.escola.biblioteca.domain.catalog.repository.WorkRepository;
 import com.escola.biblioteca.dto.response.DashboardResponse;
 import java.math.BigDecimal;
 import java.math.RoundingMode;

@@ -1,6 +1,6 @@
 package com.escola.biblioteca.dto.response;
 
-import com.escola.biblioteca.model.AdminRole;
+import com.escola.biblioteca.model.enums.AdminRole;
 import java.util.UUID;
 
 /**

@@ -1,10 +1,10 @@
 package com.escola.biblioteca.config;
 
-import com.escola.biblioteca.domain.model.Institution;
-import com.escola.biblioteca.domain.model.ProfileConfig;
-import com.escola.biblioteca.domain.repository.InstitutionRepository;
-import com.escola.biblioteca.domain.repository.ProfileConfigRepository;
-import com.escola.biblioteca.model.AdminRole;
+import com.escola.biblioteca.domain.institution.model.Institution;
+import com.escola.biblioteca.domain.patron.model.ProfileConfig;
+import com.escola.biblioteca.domain.institution.repository.InstitutionRepository;
+import com.escola.biblioteca.domain.patron.repository.ProfileConfigRepository;
+import com.escola.biblioteca.model.enums.AdminRole;
 import com.escola.biblioteca.model.Adm;
 import com.escola.biblioteca.repository.AdmRepository;
 import java.time.OffsetDateTime;
@@ -70,12 +70,12 @@ public class DataInitializer {
 
         for (ProfileDefaults p : profiles) {
             profileConfigRepository.findByInstitutionIdAndProfile(institution.getId(),
-                    com.escola.biblioteca.domain.model.PatronProfile.valueOf(p.profile()))
+                    com.escola.biblioteca.domain.patron.model.enums.PatronProfile.valueOf(p.profile()))
                     .orElseGet(() -> {
                         log.info("Criando profile_config: {} para {}", p.profile(), DEFAULT_CODE);
                         ProfileConfig config = new ProfileConfig();
                         config.setInstitutionId(institution.getId());
-                        config.setProfile(com.escola.biblioteca.domain.model.PatronProfile.valueOf(p.profile()));
+                        config.setProfile(com.escola.biblioteca.domain.patron.model.enums.PatronProfile.valueOf(p.profile()));
                         config.setMaxLoans(p.maxLoans());
                         config.setLoanDays(p.loanDays());
                         config.setMaxRenewals(p.maxRenewals());

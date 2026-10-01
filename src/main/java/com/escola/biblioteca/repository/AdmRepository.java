@@ -1,7 +1,7 @@
 package com.escola.biblioteca.repository;
 
 import com.escola.biblioteca.model.Adm;
-import com.escola.biblioteca.model.AdminRole;
+import com.escola.biblioteca.model.enums.AdminRole;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

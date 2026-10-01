@@ -42,16 +42,15 @@ public class RlsAspect {
         }
 
         try {
-            if (adminAuth.isGlobalAdmin()) {
+            UUID institutionId = adminAuth.getCurrentInstitutionId();
+            if (institutionId != null) {
+                execute(conn, "SET LOCAL app.is_global_admin = 'false'");
+                execute(conn, "SET LOCAL app.current_institution_id = '" + institutionId + "'");
+                execute(conn, "SET LOCAL app.current_adm_codigo = '" + adminAuth.getName() + "'");
+            } else if (adminAuth.isGlobalAdmin()) {
                 execute(conn, "SET LOCAL app.is_global_admin = 'true'");
                 execute(conn, "SET LOCAL app.current_institution_id = ''");
-            } else {
-                UUID institutionId = adminAuth.getCurrentInstitutionId();
-                if (institutionId != null) {
-                    execute(conn, "SET LOCAL app.is_global_admin = 'false'");
-                    execute(conn, "SET LOCAL app.current_institution_id = '" + institutionId + "'");
-                    execute(conn, "SET LOCAL app.current_adm_codigo = '" + adminAuth.getName() + "'");
-                }
+                execute(conn, "SET LOCAL app.current_adm_codigo = '" + adminAuth.getName() + "'");
             }
         } catch (SQLException e) {
             // Log but don't fail the transaction

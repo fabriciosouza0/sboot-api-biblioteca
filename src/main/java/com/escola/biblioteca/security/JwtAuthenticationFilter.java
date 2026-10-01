@@ -1,6 +1,6 @@
 package com.escola.biblioteca.security;
 
-import com.escola.biblioteca.model.AdminRole;
+import com.escola.biblioteca.model.enums.AdminRole;
 import com.escola.biblioteca.repository.AdmRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -20,10 +21,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final AdmRepository admRepository;
+    private final SecurityErrorWriter securityErrorWriter;
 
-    public JwtAuthenticationFilter(JwtService jwtService, AdmRepository admRepository) {
+    public JwtAuthenticationFilter(JwtService jwtService, AdmRepository admRepository,
+                                  SecurityErrorWriter securityErrorWriter) {
         this.jwtService = jwtService;
         this.admRepository = admRepository;
+        this.securityErrorWriter = securityErrorWriter;
     }
 
     @Override
@@ -39,7 +43,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 List<UUID> allowedInstitutionIds = resolveAllowedInstitutions(login, role, tokenInstitutionId);
 
-                UUID currentInstitutionId = resolveCurrentInstitution(request, allowedInstitutionIds, tokenInstitutionId);
+                UUID headerInstitutionId = extractInstitutionIdFromHeader(request);
+
+                if (role != AdminRole.GLOBAL_ADMIN) {
+                    if (headerInstitutionId != null && !allowedInstitutionIds.contains(headerInstitutionId)) {
+                        securityErrorWriter.write(request, response, HttpStatus.FORBIDDEN, "error.accessdenied");
+                        return;
+                    }
+                }
+
+                UUID currentInstitutionId = resolveCurrentInstitution(headerInstitutionId, allowedInstitutionIds, tokenInstitutionId);
 
                 var authorities = List.<SimpleGrantedAuthority>of(
                         new SimpleGrantedAuthority("ROLE_" + role.name())
@@ -70,15 +83,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return List.of();
     }
 
-    private UUID resolveCurrentInstitution(HttpServletRequest request, List<UUID> allowed, UUID fallback) {
+    private UUID extractInstitutionIdFromHeader(HttpServletRequest request) {
         String headerValue = request.getHeader("X-Institution-Id");
         if (headerValue != null && !headerValue.isBlank()) {
             try {
-                UUID requested = UUID.fromString(headerValue);
-                if (allowed.isEmpty() || allowed.contains(requested)) {
-                    return requested;
-                }
+                return UUID.fromString(headerValue);
             } catch (IllegalArgumentException ignored) {
+            }
+        }
+        return null;
+    }
+
+    private UUID resolveCurrentInstitution(UUID headerId, List<UUID> allowed, UUID fallback) {
+        if (headerId != null) {
+            if (allowed.isEmpty() || allowed.contains(headerId)) {
+                return headerId;
             }
         }
         if (!allowed.isEmpty()) {

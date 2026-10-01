@@ -1,6 +1,6 @@
 package com.escola.biblioteca.security;
 
-import com.escola.biblioteca.model.AdminRole;
+import com.escola.biblioteca.model.enums.AdminRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

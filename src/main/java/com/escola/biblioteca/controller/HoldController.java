@@ -1,61 +1,46 @@
 package com.escola.biblioteca.controller;
 
-import com.escola.biblioteca.dashboard.DashboardPublisher;
-import com.escola.biblioteca.domain.model.Hold;
-import com.escola.biblioteca.domain.repository.HoldRepository;
-import com.escola.biblioteca.domain.service.HoldService;
-import com.escola.biblioteca.exception.ResourceNotFoundException;
-import java.util.List;
-import java.util.UUID;
+import com.escola.biblioteca.domain.circulation.model.Hold;
+import com.escola.biblioteca.domain.circulation.service.HoldService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.UUID;
+
 @RestController
-@RequestMapping("/api/institutions/{institutionId}/holds")
+@RequestMapping("/api/holds")
+@RequiredArgsConstructor
 public class HoldController {
 
-    private final HoldRepository holdRepository;
     private final HoldService holdService;
-    private final DashboardPublisher dashboardPublisher;
-
-    public HoldController(HoldRepository holdRepository, HoldService holdService,
-                          DashboardPublisher dashboardPublisher) {
-        this.holdRepository = holdRepository;
-        this.holdService = holdService;
-        this.dashboardPublisher = dashboardPublisher;
-    }
 
     @GetMapping
-    public List<Hold> listar(@PathVariable UUID institutionId) {
-        var all = new java.util.ArrayList<Hold>();
-        holdRepository.findAll().forEach(all::add);
-        return all;
+    public List<Hold> listar() {
+        return holdService.findAll();
     }
 
     @PostMapping
-    public ResponseEntity<Hold> criar(@PathVariable UUID institutionId, @RequestBody HoldRequest request) {
+    public ResponseEntity<Hold> criar(@RequestBody HoldRequest request) {
         Hold hold = holdService.placeHold(request.patronId(), request.workId(), request.libraryId());
-        dashboardPublisher.dadosAlterados();
         return ResponseEntity.status(HttpStatus.CREATED).body(hold);
     }
 
     @DeleteMapping("/{holdId}")
-    public ResponseEntity<Void> cancelar(@PathVariable UUID institutionId, @PathVariable UUID holdId) {
+    public ResponseEntity<Void> cancelar(@PathVariable UUID holdId) {
         holdService.cancelHold(holdId);
-        dashboardPublisher.dadosAlterados();
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{holdId}/fulfill")
-    public Hold cumprir(@PathVariable UUID institutionId, @PathVariable UUID holdId) {
-        Hold fulfilled = holdService.fulfillHold(holdId);
-        dashboardPublisher.dadosAlterados();
-        return fulfilled;
+    public Hold cumprir(@PathVariable UUID holdId) {
+        return holdService.fulfillHold(holdId);
     }
 
     @PostMapping("/expire")
-    public ResponseEntity<Void> expirar(@PathVariable UUID institutionId) {
+    public ResponseEntity<Void> expirar() {
         // TODO: Implement hold expiration scheduler
         return ResponseEntity.ok().build();
     }

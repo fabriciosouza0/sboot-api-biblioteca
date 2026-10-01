@@ -1,6 +1,6 @@
 package com.escola.biblioteca.security;
 
-import com.escola.biblioteca.model.AdminRole;
+import com.escola.biblioteca.model.enums.AdminRole;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;

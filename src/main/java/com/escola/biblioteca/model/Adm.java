@@ -1,5 +1,7 @@
 package com.escola.biblioteca.model;
 
+import com.escola.biblioteca.model.enums.AdminRole;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

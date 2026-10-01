@@ -3,7 +3,7 @@ package com.escola.biblioteca.service;
 import com.escola.biblioteca.dto.request.LoginRequest;
 import com.escola.biblioteca.dto.response.TokenPair;
 import com.escola.biblioteca.exception.BusinessException;
-import com.escola.biblioteca.model.AdminRole;
+import com.escola.biblioteca.model.enums.AdminRole;
 import com.escola.biblioteca.model.Adm;
 import com.escola.biblioteca.model.RefreshToken;
 import com.escola.biblioteca.repository.AdmRepository;

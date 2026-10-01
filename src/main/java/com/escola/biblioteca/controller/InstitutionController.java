@@ -1,7 +1,7 @@
 package com.escola.biblioteca.controller;
 
-import com.escola.biblioteca.domain.model.Institution;
-import com.escola.biblioteca.domain.repository.InstitutionRepository;
+import com.escola.biblioteca.domain.institution.model.Institution;
+import com.escola.biblioteca.domain.institution.repository.InstitutionRepository;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
 import java.util.List;
 import java.util.UUID;

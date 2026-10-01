@@ -1,61 +1,42 @@
 package com.escola.biblioteca.controller;
 
-import com.escola.biblioteca.dashboard.DashboardPublisher;
-import com.escola.biblioteca.domain.model.Library;
-import com.escola.biblioteca.domain.repository.LibraryRepository;
-import com.escola.biblioteca.exception.ResourceNotFoundException;
-import java.util.List;
-import java.util.UUID;
+import com.escola.biblioteca.domain.catalog.model.Library;
+import com.escola.biblioteca.domain.catalog.service.LibraryService;
+import com.escola.biblioteca.dto.request.LibraryRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.UUID;
+
 @RestController
-@RequestMapping("/api/institutions/{institutionId}/libraries")
+@RequestMapping("/api/libraries")
+@RequiredArgsConstructor
 public class LibraryController {
 
-    private final LibraryRepository libraryRepository;
-    private final DashboardPublisher dashboardPublisher;
-
-    public LibraryController(LibraryRepository libraryRepository, DashboardPublisher dashboardPublisher) {
-        this.libraryRepository = libraryRepository;
-        this.dashboardPublisher = dashboardPublisher;
-    }
+    private final LibraryService libraryService;
 
     @GetMapping
-    public List<Library> listar(@PathVariable UUID institutionId) {
-        return libraryRepository.findByInstitutionId(institutionId);
+    public List<Library> listar(@RequestHeader("X-Institution-Id") UUID institutionId) {
+        return libraryService.findByInstitutionId(institutionId);
     }
 
     @PostMapping
-    public ResponseEntity<Library> criar(@PathVariable UUID institutionId, @RequestBody LibraryRequest request) {
-        Library library = new Library();
-        library.setInstitutionId(institutionId);
-        library.setName(request.name());
-        library.setIsCentral(request.isCentral());
-        library.marcarNovo();
-        Library saved = libraryRepository.save(library);
-        dashboardPublisher.dadosAlterados();
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<Library> criar(@RequestHeader("X-Institution-Id") UUID institutionId,
+                                         @RequestBody LibraryRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(libraryService.create(institutionId, request));
     }
 
     @PutMapping("/{id}")
-    public Library atualizar(@PathVariable UUID institutionId, @PathVariable UUID id, @RequestBody LibraryRequest request) {
-        Library library = libraryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("error.notfound.library"));
-        library.setName(request.name());
-        library.setIsCentral(request.isCentral());
-        Library saved = libraryRepository.save(library);
-        dashboardPublisher.dadosAlterados();
-        return saved;
+    public Library atualizar(@PathVariable UUID id, @RequestBody LibraryRequest request) {
+        return libraryService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> remover(@PathVariable UUID institutionId, @PathVariable UUID id) {
-        libraryRepository.deleteById(id);
-        dashboardPublisher.dadosAlterados();
+    public ResponseEntity<Void> remover(@PathVariable UUID id) {
+        libraryService.delete(id);
         return ResponseEntity.noContent().build();
     }
-
-    public record LibraryRequest(String name, boolean isCentral) {}
 }
