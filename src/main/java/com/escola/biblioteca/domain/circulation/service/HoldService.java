@@ -111,20 +111,29 @@ public class HoldService {
         return all;
     }
 
-//    @Transactional
-//    public void expireHolds() {
-//        List<Hold> expired = holdRepository.findReadyExpired();
-//        for (Hold hold : expired) {
-//            hold.setStatus(HoldStatus.EXPIRED);
-//            hold.setCancelledAt(OffsetDateTime.now());
-//            holdRepository.save(hold);
-//            reorderPositions(hold.getWorkId(), hold.getLibraryId());
-//            publishEvent(hold.getId(), "HoldExpired", hold);
-//
-//            Optional<Hold> next = holdRepository.findNextWaitingByWorkIdAndLibraryId(hold.getWorkId(), hold.getLibraryId());
-//            next.ifPresent(this::notifyReady);
-//        }
-//    }
+    @Transactional
+    public int expireHolds() {
+        return expireHolds(OffsetDateTime.now());
+    }
+
+    @Transactional
+    public int expireHolds(OffsetDateTime now) {
+        List<Hold> expired = holdRepository.findReadyExpired(now);
+        for (Hold hold : expired) {
+            hold.setStatus(HoldStatus.EXPIRED);
+            hold.setCancelledAt(now);
+            holdRepository.save(hold);
+            reorderPositions(hold.getWorkId(), hold.getLibraryId());
+            publishEvent(hold.getId(), "HoldExpired", hold);
+
+            Optional<Hold> next = holdRepository.findNextWaitingByWorkIdAndLibraryId(hold.getWorkId(), hold.getLibraryId());
+            next.ifPresent(this::notifyReady);
+        }
+        if (!expired.isEmpty()) {
+            dashboardPublisher.dadosAlterados();
+        }
+        return expired.size();
+    }
 
     private void notifyReady(Hold hold) {
         hold.setStatus(HoldStatus.READY);

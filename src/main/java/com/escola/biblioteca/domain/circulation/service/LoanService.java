@@ -9,6 +9,7 @@ import com.escola.biblioteca.domain.circulation.policy.LoanPolicy;
 import com.escola.biblioteca.domain.outbox.model.OutboxEvent;
 import com.escola.biblioteca.domain.patron.model.Patron;
 import com.escola.biblioteca.domain.patron.service.PatronService;
+import com.escola.biblioteca.domain.circulation.repository.HoldRepository;
 import com.escola.biblioteca.domain.catalog.repository.ItemRepository;
 import com.escola.biblioteca.domain.circulation.repository.LoanRepository;
 import com.escola.biblioteca.domain.outbox.repository.OutboxEventRepository;
@@ -29,6 +30,7 @@ public class LoanService {
 
     private final LoanRepository loanRepository;
     private final ItemRepository itemRepository;
+    private final HoldRepository holdRepository;
     private final PatronService patronService;
     private final OutboxEventRepository outboxEventRepository;
     private final DashboardPublisher dashboardPublisher;
@@ -150,6 +152,74 @@ public class LoanService {
 
     public List<Loan> findOverdueByPatron(UUID patronId) {
         return loanRepository.findOverdueByPatronId(patronId);
+    }
+
+    @Transactional
+    public int detectAndMarkOverdues() {
+        return detectAndMarkOverdues(OffsetDateTime.now());
+    }
+
+    @Transactional
+    public int detectAndMarkOverdues(OffsetDateTime now) {
+        List<Loan> overdueLoans = loanRepository.findActiveLoansDueBefore(now);
+        for (Loan loan : overdueLoans) {
+            loan.setStatus(LoanStatus.OVERDUE);
+            loanRepository.save(loan);
+            publishEvent(loan.getId(), "LoanOverdue", loan);
+        }
+        if (!overdueLoans.isEmpty()) {
+            dashboardPublisher.dadosAlterados();
+        }
+        return overdueLoans.size();
+    }
+
+    @Transactional
+    public int autoRenewEligibleLoans() {
+        return autoRenewEligibleLoans(OffsetDateTime.now(), 3);
+    }
+
+    @Transactional
+    public int autoRenewEligibleLoans(OffsetDateTime now, int daysThreshold) {
+        OffsetDateTime windowEnd = now.plus(daysThreshold, ChronoUnit.DAYS);
+        List<Loan> candidateLoans = loanRepository.findActiveLoansDueBetween(now, windowEnd);
+        int renewedCount = 0;
+
+        for (Loan loan : candidateLoans) {
+            try {
+                Patron patron = patronService.findById(loan.getPatronId());
+                if (patronService.isBlocked(patron)) {
+                    continue;
+                }
+
+                LoanPolicy policy = patronService.getLimits(patron);
+                if (loan.getRenewalCount() >= policy.getMaxRenewals()) {
+                    continue;
+                }
+
+                Item item = itemRepository.findById(loan.getItemId()).orElse(null);
+                if (item == null) {
+                    continue;
+                }
+
+                if (holdRepository.countWaitingByWorkId(item.getWorkId()) > 0) {
+                    continue;
+                }
+
+                loan.setDueAt(loan.getDueAt().plus(policy.getLoanDays(), ChronoUnit.DAYS));
+                loan.setRenewalCount(loan.getRenewalCount() + 1);
+                loanRepository.save(loan);
+
+                publishEvent(loan.getId(), "LoanAutoRenewed", loan);
+                renewedCount++;
+            } catch (Exception ignored) {
+                // Ignore individual loan failures
+            }
+        }
+
+        if (renewedCount > 0) {
+            dashboardPublisher.dadosAlterados();
+        }
+        return renewedCount;
     }
 
     private void publishEvent(UUID aggregateId, String eventType, Object payload) {

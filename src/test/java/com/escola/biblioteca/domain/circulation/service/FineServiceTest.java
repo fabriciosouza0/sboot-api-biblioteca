@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -284,5 +285,28 @@ class FineServiceTest {
         assertEquals(FineStatus.WRITTEN_OFF, writtenOff.getStatus());
         assertEquals(0, writtenOff.getBalanceCents());
         assertNotNull(writtenOff.getWaivedAt());
+    }
+
+    @Test
+    void accrueOverdueFines_shouldAccrueFinesForOverdueLoans() {
+        Loan overdueLoan = new Loan();
+        overdueLoan.setId(UUID.randomUUID());
+        overdueLoan.setPatronId(patronId);
+        overdueLoan.setStatus(LoanStatus.OVERDUE);
+        overdueLoan.setDueAt(OffsetDateTime.now().minusDays(3));
+
+        when(loanRepository.findAllOverdueLoans()).thenReturn(List.of(overdueLoan));
+        when(patronService.findById(patronId)).thenReturn(patron);
+        when(profileConfigRepository.findByInstitutionIdAndProfile(patron.getInstitutionId(), PatronProfile.STUDENT))
+                .thenReturn(Optional.of(config));
+        when(fineRepository.findPendingOverdueByLoanId(overdueLoan.getId())).thenReturn(Optional.empty());
+        when(fineRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        int result = fineService.accrueOverdueFines();
+
+        assertEquals(1, result);
+        verify(fineRepository, times(1)).save(any(Fine.class));
+        verify(outboxEventRepository, times(1)).save(any());
+        verify(dashboardPublisher, times(1)).dadosAlterados();
     }
 }

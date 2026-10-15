@@ -22,6 +22,7 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -230,6 +231,70 @@ public class FineService {
 
     public List<Fine> findPendingByPatron(UUID patronId) {
         return fineRepository.findPendingByPatronId(patronId);
+    }
+
+    @Transactional
+    public int accrueOverdueFines() {
+        return accrueOverdueFines(OffsetDateTime.now());
+    }
+
+    @Transactional
+    public int accrueOverdueFines(OffsetDateTime now) {
+        List<Loan> overdueLoans = loanRepository.findAllOverdueLoans();
+        int processedCount = 0;
+
+        for (Loan loan : overdueLoans) {
+            try {
+                long daysOverdue = ChronoUnit.DAYS.between(loan.getDueAt().truncatedTo(ChronoUnit.DAYS), now.truncatedTo(ChronoUnit.DAYS));
+                if (daysOverdue <= 0) {
+                    continue;
+                }
+
+                Patron patron = patronService.findById(loan.getPatronId());
+                var config = profileConfigRepository.findByInstitutionIdAndProfile(patron.getInstitutionId(), patron.getProfile())
+                        .orElse(null);
+                if (config == null || config.getFineRateCents() <= 0) {
+                    continue;
+                }
+
+                int calculatedAmount = Math.min((int) daysOverdue * config.getFineRateCents(), config.getFineCapCents());
+                Optional<Fine> existingOpt = fineRepository.findPendingOverdueByLoanId(loan.getId());
+
+                if (existingOpt.isPresent()) {
+                    Fine existing = existingOpt.get();
+                    if (existing.getAmountCents() < calculatedAmount) {
+                        int diff = calculatedAmount - existing.getAmountCents();
+                        existing.setAmountCents(calculatedAmount);
+                        existing.setBalanceCents(existing.getBalanceCents() + diff);
+                        existing.setReason("Atraso de %d dia(s)".formatted(daysOverdue));
+                        fineRepository.save(existing);
+                        publishEvent(existing.getId(), "FineUpdated", existing);
+                        processedCount++;
+                    }
+                } else {
+                    Fine fine = new Fine();
+                    fine.setPatronId(patron.getId());
+                    fine.setLoanId(loan.getId());
+                    fine.setType(FineType.OVERDUE);
+                    fine.setAmountCents(calculatedAmount);
+                    fine.setBalanceCents(calculatedAmount);
+                    fine.setStatus(FineStatus.PENDING);
+                    fine.setAssessedAt(now);
+                    fine.setReason("Atraso de %d dia(s)".formatted(daysOverdue));
+                    fine.marcarNovo();
+                    Fine saved = fineRepository.save(fine);
+                    publishEvent(saved.getId(), "FineAssessed", saved);
+                    processedCount++;
+                }
+            } catch (Exception ignored) {
+                // Ignore individual loan failures
+            }
+        }
+
+        if (processedCount > 0) {
+            dashboardPublisher.dadosAlterados();
+        }
+        return processedCount;
     }
 
     private void checkPatronUnblock(UUID patronId) {

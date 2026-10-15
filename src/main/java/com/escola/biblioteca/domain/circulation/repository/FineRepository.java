@@ -12,6 +12,9 @@ public interface FineRepository extends CrudRepository<Fine, UUID> {
     List<Fine> findByPatronIdAndStatusIn(UUID patronId, List<FineStatus> statuses);
     List<Fine> findPendingByPatronId(UUID patronId);
 
+    @Query("SELECT * FROM fine WHERE loan_id = :loanId AND type = 'OVERDUE' AND status IN ('PENDING', 'PARTIAL') LIMIT 1")
+    Optional<Fine> findPendingOverdueByLoanId(UUID loanId);
+
     @Query("SELECT COALESCE(SUM(balance_cents), 0) FROM fine WHERE patron_id = :patronId AND status IN ('PENDING','PARTIAL')")
     Integer sumBalanceByPatronId(UUID patronId);
 

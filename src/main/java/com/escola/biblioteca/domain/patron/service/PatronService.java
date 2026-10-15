@@ -129,4 +129,23 @@ public class PatronService {
     public boolean isBlocked(Patron patron) {
         return patron.getStatus() == PatronStatus.BLOCKED || patron.getFineBalance() > 2000;
     }
+
+    @Transactional
+    public int updatePatronBlockStatuses() {
+        List<Patron> activeWithFines = patronRepository.findActivePatronsWithFines();
+        int blockedCount = 0;
+
+        for (Patron patron : activeWithFines) {
+            if (isBlocked(patron) && patron.getStatus() != PatronStatus.BLOCKED) {
+                patron.setStatus(PatronStatus.BLOCKED);
+                patronRepository.save(patron);
+                blockedCount++;
+            }
+        }
+
+        if (blockedCount > 0) {
+            dashboardPublisher.dadosAlterados();
+        }
+        return blockedCount;
+    }
 }

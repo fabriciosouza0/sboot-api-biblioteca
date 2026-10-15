@@ -11,6 +11,7 @@ import com.escola.biblioteca.domain.patron.model.enums.PatronProfile;
 import com.escola.biblioteca.domain.patron.model.enums.PatronStatus;
 import com.escola.biblioteca.domain.patron.service.PatronService;
 import com.escola.biblioteca.domain.catalog.repository.ItemRepository;
+import com.escola.biblioteca.domain.circulation.repository.HoldRepository;
 import com.escola.biblioteca.domain.circulation.repository.LoanRepository;
 import com.escola.biblioteca.domain.outbox.repository.OutboxEventRepository;
 import com.escola.biblioteca.exception.BusinessException;
@@ -40,6 +41,9 @@ class LoanServiceTest {
 
     @Mock
     private ItemRepository itemRepository;
+
+    @Mock
+    private HoldRepository holdRepository;
 
     @Mock
     private PatronService patronService;
@@ -248,5 +252,56 @@ class LoanServiceTest {
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> loanService.renew(loan.getId()));
         assertEquals("error.loan.not.active", ex.getCode());
+    }
+
+    @Test
+    void detectAndMarkOverdues_shouldTransitionLoansToOverdueAndPublishEvents() {
+        Loan loan1 = new Loan();
+        loan1.setId(UUID.randomUUID());
+        loan1.setStatus(LoanStatus.ACTIVE);
+        loan1.setDueAt(OffsetDateTime.now().minusDays(1));
+
+        Loan loan2 = new Loan();
+        loan2.setId(UUID.randomUUID());
+        loan2.setStatus(LoanStatus.ACTIVE);
+        loan2.setDueAt(OffsetDateTime.now().minusDays(3));
+
+        when(loanRepository.findActiveLoansDueBefore(any())).thenReturn(List.of(loan1, loan2));
+
+        int result = loanService.detectAndMarkOverdues();
+
+        assertEquals(2, result);
+        assertEquals(LoanStatus.OVERDUE, loan1.getStatus());
+        assertEquals(LoanStatus.OVERDUE, loan2.getStatus());
+        verify(loanRepository, times(1)).save(loan1);
+        verify(loanRepository, times(1)).save(loan2);
+        verify(outboxEventRepository, times(2)).save(any());
+        verify(dashboardPublisher, times(1)).dadosAlterados();
+    }
+
+    @Test
+    void autoRenewEligibleLoans_shouldRenewEligibleLoans() {
+        Loan loan = new Loan();
+        loan.setId(UUID.randomUUID());
+        loan.setPatronId(patronId);
+        loan.setItemId(itemId);
+        loan.setStatus(LoanStatus.ACTIVE);
+        loan.setDueAt(OffsetDateTime.now().plusDays(2));
+        loan.setRenewalCount(0);
+
+        when(loanRepository.findActiveLoansDueBetween(any(), any())).thenReturn(List.of(loan));
+        when(patronService.findById(patronId)).thenReturn(patron);
+        when(patronService.isBlocked(patron)).thenReturn(false);
+        when(patronService.getLimits(patron)).thenReturn(policy);
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+        when(holdRepository.countWaitingByWorkId(item.getWorkId())).thenReturn(0L);
+
+        int result = loanService.autoRenewEligibleLoans();
+
+        assertEquals(1, result);
+        assertEquals(1, loan.getRenewalCount());
+        verify(loanRepository, times(1)).save(loan);
+        verify(outboxEventRepository, times(1)).save(any());
+        verify(dashboardPublisher, times(1)).dadosAlterados();
     }
 }

@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -150,5 +151,23 @@ class PatronServiceTest {
         patron.setStatus(PatronStatus.ACTIVE);
         patron.setFineBalance(1000);
         assertFalse(patronService.isBlocked(patron));
+    }
+
+    @Test
+    void updatePatronBlockStatuses_shouldBlockPatronsWithHighFines() {
+        Patron p1 = new Patron();
+        p1.setId(UUID.randomUUID());
+        p1.setStatus(PatronStatus.ACTIVE);
+        p1.setFineBalance(3000);
+
+        when(patronRepository.findActivePatronsWithFines()).thenReturn(List.of(p1));
+        when(patronRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        int blocked = patronService.updatePatronBlockStatuses();
+
+        assertEquals(1, blocked);
+        assertEquals(PatronStatus.BLOCKED, p1.getStatus());
+        verify(patronRepository, times(1)).save(p1);
+        verify(dashboardPublisher, times(1)).dadosAlterados();
     }
 }

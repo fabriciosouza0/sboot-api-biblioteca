@@ -5,15 +5,27 @@ import com.escola.biblioteca.domain.circulation.model.enums.HoldStatus;
 import com.escola.biblioteca.dto.response.WorkDependenciesResponse;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface HoldRepository extends CrudRepository<Hold, UUID> {
     List<Hold> findByPatronId(UUID patronId);
+
+    @Query("SELECT * FROM hold WHERE work_id = :workId AND library_id = :libraryId AND status = 'WAITING' ORDER BY position ASC")
     List<Hold> findWaitingByWorkIdAndLibraryId(UUID workId, UUID libraryId);
+
+    @Query("SELECT * FROM hold WHERE work_id = :workId AND library_id = :libraryId AND status = 'WAITING' ORDER BY position ASC LIMIT 1")
     Optional<Hold> findNextWaitingByWorkIdAndLibraryId(UUID workId, UUID libraryId);
+
     List<Hold> findByWorkIdAndStatus(UUID workId, HoldStatus status);
+
+    @Query("SELECT * FROM hold WHERE status = 'READY' AND expires_at < :now")
+    List<Hold> findReadyExpired(OffsetDateTime now);
+
+    @Query("SELECT COUNT(*) FROM hold WHERE work_id = :workId AND status = 'WAITING'")
+    long countWaitingByWorkId(UUID workId);
 
     @Query("SELECT COUNT(*) FROM hold h JOIN work w ON h.work_id = w.id WHERE w.institution_id = :institutionId AND h.status = :status")
     long countByInstitutionIdAndStatus(UUID institutionId, String status);

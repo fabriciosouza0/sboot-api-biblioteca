@@ -12,6 +12,9 @@ public interface PatronRepository extends CrudRepository<Patron, UUID> {
     Optional<Patron> findByInstitutionIdAndExternalId(UUID institutionId, String externalId);
     List<Patron> findByInstitutionId(UUID institutionId);
 
+    @Query("SELECT * FROM patron WHERE status = 'ACTIVE' AND fine_balance > 0")
+    List<Patron> findActivePatronsWithFines();
+
     @Query("SELECT COUNT(*) FROM patron WHERE institution_id = :institutionId")
     long countByInstitutionId(UUID institutionId);
 

@@ -189,31 +189,33 @@ class HoldServiceTest {
         assertEquals("error.hold.not.ready", ex.getCode());
     }
 
-//    @Test
-//    void expireHolds_shouldExpireReadyHoldsAndNotifyNext() {
-//        Hold expired = createHold(HoldStatus.READY);
-//        expired.setId(UUID.randomUUID());
-//        expired.setWorkId(workId);
-//        expired.setLibraryId(libraryId);
-//        expired.setExpiresAt(Instant.now().minusSeconds(3600));
-//
-//        Hold nextInQueue = createHold(HoldStatus.WAITING);
-//        nextInQueue.setId(UUID.randomUUID());
-//        nextInQueue.setWorkId(workId);
-//        nextInQueue.setLibraryId(libraryId);
-//
-//        when(holdRepository.findReadyExpired()).thenReturn(List.of(expired));
-//        when(holdRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-//        when(holdRepository.findNextWaitingByWorkIdAndLibraryId(workId, libraryId)).thenReturn(Optional.of(nextInQueue));
-//
-//        holdService.expireHolds();
-//
-//        assertEquals(HoldStatus.EXPIRED, expired.getStatus());
-//        assertEquals(HoldStatus.READY, nextInQueue.getStatus());
-//        assertNotNull(nextInQueue.getReadyAt());
-//        assertNotNull(nextInQueue.getExpiresAt());
-//        verify(outboxEventRepository, times(2)).save(any());
-//    }
+    @Test
+    void expireHolds_shouldExpireReadyHoldsAndNotifyNext() {
+        Hold expired = createHold(HoldStatus.READY);
+        expired.setId(UUID.randomUUID());
+        expired.setWorkId(workId);
+        expired.setLibraryId(libraryId);
+        expired.setExpiresAt(java.time.OffsetDateTime.now().minusHours(1));
+
+        Hold nextInQueue = createHold(HoldStatus.WAITING);
+        nextInQueue.setId(UUID.randomUUID());
+        nextInQueue.setWorkId(workId);
+        nextInQueue.setLibraryId(libraryId);
+
+        when(holdRepository.findReadyExpired(any())).thenReturn(List.of(expired));
+        when(holdRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(holdRepository.findNextWaitingByWorkIdAndLibraryId(workId, libraryId)).thenReturn(Optional.of(nextInQueue));
+
+        int result = holdService.expireHolds();
+
+        assertEquals(1, result);
+        assertEquals(HoldStatus.EXPIRED, expired.getStatus());
+        assertEquals(HoldStatus.READY, nextInQueue.getStatus());
+        assertNotNull(nextInQueue.getReadyAt());
+        assertNotNull(nextInQueue.getExpiresAt());
+        verify(outboxEventRepository, times(2)).save(any());
+        verify(dashboardPublisher, times(1)).dadosAlterados();
+    }
 
     private Hold createHold(HoldStatus status) {
         Hold hold = new Hold();
