@@ -16,5 +16,6 @@ public record ItemResponse(
         ItemStatus status,
         Long version,
         OffsetDateTime createdAt,
-        OffsetDateTime updatedAt
+        OffsetDateTime updatedAt,
+        String transferNote
 ) {}

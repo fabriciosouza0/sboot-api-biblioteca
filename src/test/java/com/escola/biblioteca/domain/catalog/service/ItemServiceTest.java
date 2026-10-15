@@ -137,22 +137,25 @@ class ItemServiceTest {
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
         when(itemRepository.save(any(Item.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Item transferred = itemService.transfer(itemId, targetLib);
+        Item transferred = itemService.transfer(itemId, targetLib, "Envio para manutenção");
 
         assertEquals(targetLib, transferred.getLibraryId());
         assertEquals(ItemStatus.IN_TRANSIT, transferred.getStatus());
+        assertEquals("Envio para manutenção", transferred.getTransferNote());
         verify(dashboardPublisher).dadosAlterados();
     }
 
     @Test
     void receive_setsAvailableAndNotifiesDashboard() {
         item.setStatus(ItemStatus.IN_TRANSIT);
+        item.setTransferNote("Nota temporária");
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
         when(itemRepository.save(any(Item.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Item received = itemService.receive(itemId);
 
         assertEquals(ItemStatus.AVAILABLE, received.getStatus());
+        assertNull(received.getTransferNote());
         verify(dashboardPublisher).dadosAlterados();
     }
 
@@ -161,9 +164,10 @@ class ItemServiceTest {
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
         when(itemRepository.save(any(Item.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Item withdrawn = itemService.withdraw(itemId);
+        Item withdrawn = itemService.withdraw(itemId, "Danificado sem recuperação");
 
         assertEquals(ItemStatus.WITHDRAWN, withdrawn.getStatus());
+        assertEquals("Danificado sem recuperação", withdrawn.getWithdrawReason());
         verify(dashboardPublisher).dadosAlterados();
     }
 }

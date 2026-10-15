@@ -110,7 +110,8 @@ public class ItemQueryRepository {
         String selectSql = """
             SELECT i.id, i.work_id, w.title AS work_title, w.isbn13 AS work_isbn13,
                    i.library_id, l.name AS library_name,
-                   i.barcode, i.call_number, i.status, i.version, i.created_at, i.updated_at
+                   i.barcode, i.call_number, i.status, i.version, i.created_at, i.updated_at,
+                   i.transfer_note
             """;
 
         return pagedQueryHelper.paginate(selectSql, fromAndWhere.toString(), params, "i.created_at DESC", pageable, ItemResponse.class);

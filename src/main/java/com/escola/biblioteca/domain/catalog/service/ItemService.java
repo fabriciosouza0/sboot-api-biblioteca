@@ -84,20 +84,26 @@ public class ItemService {
     }
 
     @Transactional
-    public Item transfer(UUID id, UUID targetLibraryId) {
+    public Item transfer(UUID id, UUID targetLibraryId, String transferNote) {
         Item item = findById(id);
         item.setLibraryId(targetLibraryId);
         item.setStatus(ItemStatus.IN_TRANSIT);
+        item.setTransferNote(transferNote);
 
         Item saved = itemRepository.save(item);
         dashboardPublisher.dadosAlterados();
         return saved;
+    }
+
+    public Item transfer(UUID id, UUID targetLibraryId) {
+        return transfer(id, targetLibraryId, null);
     }
 
     @Transactional
     public Item receive(UUID id) {
         Item item = findById(id);
         item.setStatus(ItemStatus.AVAILABLE);
+        item.setTransferNote(null);
 
         Item saved = itemRepository.save(item);
         dashboardPublisher.dadosAlterados();
@@ -105,12 +111,17 @@ public class ItemService {
     }
 
     @Transactional
-    public Item withdraw(UUID id) {
+    public Item withdraw(UUID id, String reason) {
         Item item = findById(id);
         item.setStatus(ItemStatus.WITHDRAWN);
+        item.setWithdrawReason(reason);
 
         Item saved = itemRepository.save(item);
         dashboardPublisher.dadosAlterados();
         return saved;
+    }
+
+    public Item withdraw(UUID id) {
+        return withdraw(id, null);
     }
 }

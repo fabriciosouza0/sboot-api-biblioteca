@@ -4,6 +4,7 @@ import com.escola.biblioteca.domain.catalog.model.Item;
 import com.escola.biblioteca.domain.catalog.service.ItemService;
 import com.escola.biblioteca.dto.request.ItemRequest;
 import com.escola.biblioteca.dto.request.TransferRequest;
+import com.escola.biblioteca.dto.request.WithdrawRequest;
 import lombok.RequiredArgsConstructor;
 import com.escola.biblioteca.domain.catalog.model.enums.ItemStatus;
 import com.escola.biblioteca.dto.response.ItemResponse;
@@ -52,7 +53,7 @@ public class ItemController {
 
     @PostMapping("/{id}/transfer")
     public ResponseEntity<Item> transferir(@PathVariable UUID id, @RequestBody TransferRequest request) {
-        return ResponseEntity.ok(itemService.transfer(id, request.targetLibraryId()));
+        return ResponseEntity.ok(itemService.transfer(id, request.targetLibraryId(), request.transferNote()));
     }
 
     @PostMapping("/{id}/receive")
@@ -61,7 +62,8 @@ public class ItemController {
     }
 
     @PostMapping("/{id}/withdraw")
-    public ResponseEntity<Item> darBaixa(@PathVariable UUID id) {
-        return ResponseEntity.ok(itemService.withdraw(id));
+    public ResponseEntity<Item> darBaixa(@PathVariable UUID id, @RequestBody(required = false) WithdrawRequest request) {
+        String reason = (request != null) ? request.reason() : null;
+        return ResponseEntity.ok(itemService.withdraw(id, reason));
     }
 }

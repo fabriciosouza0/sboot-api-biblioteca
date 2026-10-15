@@ -33,6 +33,10 @@ public class Item implements Persistable<UUID> {
 
     private ItemStatus status = ItemStatus.AVAILABLE;
 
+    private String transferNote;
+
+    private String withdrawReason;
+
     @Version
     private Long version = 0L;
 
