@@ -11,6 +11,8 @@ public record ItemResponse(
         String workIsbn13,
         UUID libraryId,
         String libraryName,
+        UUID targetLibraryId,
+        String targetLibraryName,
         String barcode,
         String callNumber,
         ItemStatus status,

@@ -6,6 +6,7 @@ import com.escola.biblioteca.domain.catalog.model.enums.ItemStatus;
 import com.escola.biblioteca.domain.catalog.repository.ItemQueryRepository;
 import com.escola.biblioteca.domain.catalog.repository.ItemRepository;
 import com.escola.biblioteca.dto.request.ItemRequest;
+import com.escola.biblioteca.exception.BusinessException;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -139,24 +140,81 @@ class ItemServiceTest {
 
         Item transferred = itemService.transfer(itemId, targetLib, "Envio para manutenção");
 
-        assertEquals(targetLib, transferred.getLibraryId());
+        assertEquals(libraryId, transferred.getLibraryId());
+        assertEquals(targetLib, transferred.getTargetLibraryId());
         assertEquals(ItemStatus.IN_TRANSIT, transferred.getStatus());
         assertEquals("Envio para manutenção", transferred.getTransferNote());
         verify(dashboardPublisher).dadosAlterados();
     }
 
     @Test
-    void receive_setsAvailableAndNotifiesDashboard() {
+    void transfer_sameLibrary_throwsBusinessException() {
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+
+        assertThrows(BusinessException.class, () -> itemService.transfer(itemId, libraryId, "Mesma filial"));
+    }
+
+    @Test
+    void receive_asTargetLibraryOperator_setsAvailableAndDestinationLibrary() {
+        UUID targetLib = UUID.randomUUID();
         item.setStatus(ItemStatus.IN_TRANSIT);
+        item.setTargetLibraryId(targetLib);
         item.setTransferNote("Nota temporária");
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
         when(itemRepository.save(any(Item.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Item received = itemService.receive(itemId);
+        Item received = itemService.receive(itemId, targetLib, false);
 
-        assertEquals(ItemStatus.AVAILABLE, received.getStatus());
+        assertEquals(targetLib, received.getLibraryId());
+        assertNull(received.getTargetLibraryId());
         assertNull(received.getTransferNote());
+        assertEquals(ItemStatus.AVAILABLE, received.getStatus());
         verify(dashboardPublisher).dadosAlterados();
+    }
+
+    @Test
+    void receive_asDifferentLibraryOperator_throwsBusinessException() {
+        UUID targetLib = UUID.randomUUID();
+        UUID otherLib = UUID.randomUUID();
+        item.setStatus(ItemStatus.IN_TRANSIT);
+        item.setTargetLibraryId(targetLib);
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+
+        assertThrows(BusinessException.class, () -> itemService.receive(itemId, otherLib, false));
+    }
+
+    @Test
+    void receive_asGlobalAdmin_bypassesActiveLibraryCheck() {
+        UUID targetLib = UUID.randomUUID();
+        item.setStatus(ItemStatus.IN_TRANSIT);
+        item.setTargetLibraryId(targetLib);
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+        when(itemRepository.save(any(Item.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Item received = itemService.receive(itemId, null, true);
+
+        assertEquals(targetLib, received.getLibraryId());
+        assertEquals(ItemStatus.AVAILABLE, received.getStatus());
+        verify(dashboardPublisher).dadosAlterados();
+    }
+
+    @Test
+    void receive_withoutActiveLibrary_throwsBusinessException() {
+        UUID targetLib = UUID.randomUUID();
+        item.setStatus(ItemStatus.IN_TRANSIT);
+        item.setTargetLibraryId(targetLib);
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+
+        assertThrows(BusinessException.class, () -> itemService.receive(itemId, null, false));
+    }
+
+    @Test
+    void receive_notInTransit_throwsBusinessException() {
+        UUID targetLib = UUID.randomUUID();
+        item.setStatus(ItemStatus.AVAILABLE);
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+
+        assertThrows(BusinessException.class, () -> itemService.receive(itemId, targetLib, false));
     }
 
     @Test

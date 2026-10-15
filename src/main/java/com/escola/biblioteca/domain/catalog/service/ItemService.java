@@ -7,6 +7,7 @@ import com.escola.biblioteca.domain.catalog.repository.ItemQueryRepository;
 import com.escola.biblioteca.domain.catalog.repository.ItemRepository;
 import com.escola.biblioteca.dto.request.ItemRequest;
 import com.escola.biblioteca.dto.response.ItemResponse;
+import com.escola.biblioteca.exception.BusinessException;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -86,7 +87,10 @@ public class ItemService {
     @Transactional
     public Item transfer(UUID id, UUID targetLibraryId, String transferNote) {
         Item item = findById(id);
-        item.setLibraryId(targetLibraryId);
+        if (targetLibraryId == null || targetLibraryId.equals(item.getLibraryId())) {
+            throw new BusinessException("A filial de destino deve ser diferente da filial de origem.");
+        }
+        item.setTargetLibraryId(targetLibraryId);
         item.setStatus(ItemStatus.IN_TRANSIT);
         item.setTransferNote(transferNote);
 
@@ -100,14 +104,35 @@ public class ItemService {
     }
 
     @Transactional
-    public Item receive(UUID id) {
+    public Item receive(UUID id, UUID activeLibraryId, boolean isGlobalAdmin) {
         Item item = findById(id);
+        if (item.getStatus() != ItemStatus.IN_TRANSIT) {
+            throw new BusinessException("Apenas exemplares em trânsito podem ser recebidos.");
+        }
+
+        UUID destination = item.getTargetLibraryId() != null ? item.getTargetLibraryId() : item.getLibraryId();
+
+        if (!isGlobalAdmin) {
+            if (activeLibraryId == null) {
+                throw new BusinessException("Filial ativa não informada para confirmar o recebimento.");
+            }
+            if (!activeLibraryId.equals(destination)) {
+                throw new BusinessException("Apenas operadores da filial de destino podem confirmar o recebimento.");
+            }
+        }
+
+        item.setLibraryId(destination);
+        item.setTargetLibraryId(null);
         item.setStatus(ItemStatus.AVAILABLE);
         item.setTransferNote(null);
 
         Item saved = itemRepository.save(item);
         dashboardPublisher.dadosAlterados();
         return saved;
+    }
+
+    public Item receive(UUID id) {
+        return receive(id, null, true);
     }
 
     @Transactional

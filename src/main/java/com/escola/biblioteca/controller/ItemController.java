@@ -8,6 +8,9 @@ import com.escola.biblioteca.dto.request.WithdrawRequest;
 import lombok.RequiredArgsConstructor;
 import com.escola.biblioteca.domain.catalog.model.enums.ItemStatus;
 import com.escola.biblioteca.dto.response.ItemResponse;
+import com.escola.biblioteca.security.AdminAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -57,8 +60,12 @@ public class ItemController {
     }
 
     @PostMapping("/{id}/receive")
-    public ResponseEntity<Item> receber(@PathVariable UUID id) {
-        return ResponseEntity.ok(itemService.receive(id));
+    public ResponseEntity<Item> receber(
+            @PathVariable UUID id,
+            @RequestHeader(value = "X-Library-Id", required = false) UUID activeLibraryId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isGlobalAdmin = auth instanceof AdminAuthenticationToken adminAuth && adminAuth.isGlobalAdmin();
+        return ResponseEntity.ok(itemService.receive(id, activeLibraryId, isGlobalAdmin));
     }
 
     @PostMapping("/{id}/withdraw")

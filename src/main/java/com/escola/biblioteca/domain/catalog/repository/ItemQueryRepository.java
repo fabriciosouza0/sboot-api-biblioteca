@@ -86,6 +86,7 @@ public class ItemQueryRepository {
             FROM item i
             LEFT JOIN work w ON w.id = i.work_id
             LEFT JOIN library l ON l.id = i.library_id
+            LEFT JOIN library tl ON tl.id = i.target_library_id
             WHERE 1=1
             """);
 
@@ -95,7 +96,7 @@ public class ItemQueryRepository {
             params.put("workId", workId);
         }
         if (libraryId != null) {
-            fromAndWhere.append(" AND i.library_id = :libraryId");
+            fromAndWhere.append(" AND (i.library_id = :libraryId OR (i.target_library_id = :libraryId AND i.status = 'IN_TRANSIT'))");
             params.put("libraryId", libraryId);
         }
         if (status != null) {
@@ -110,6 +111,7 @@ public class ItemQueryRepository {
         String selectSql = """
             SELECT i.id, i.work_id, w.title AS work_title, w.isbn13 AS work_isbn13,
                    i.library_id, l.name AS library_name,
+                   i.target_library_id, tl.name AS target_library_name,
                    i.barcode, i.call_number, i.status, i.version, i.created_at, i.updated_at,
                    i.transfer_note
             """;
