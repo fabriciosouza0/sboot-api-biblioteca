@@ -2,7 +2,11 @@ package com.escola.biblioteca.controller;
 
 import com.escola.biblioteca.domain.circulation.model.Loan;
 import com.escola.biblioteca.domain.circulation.service.LoanService;
+import com.escola.biblioteca.dto.response.LoanResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +22,12 @@ public class LoanController {
     private final LoanService loanService;
 
     @GetMapping
-    public List<Loan> listar(@RequestParam(required = false) UUID patronId) {
-        if (patronId != null) {
-            return loanService.findActiveByPatron(patronId);
-        }
-        return loanService.findAll();
+    public Page<LoanResponse> listar(
+            @RequestParam(required = false) UUID patronId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String term,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return loanService.findAllWithDetails(patronId, status, term, pageable);
     }
 
     @PostMapping

@@ -1,10 +1,13 @@
 package com.escola.biblioteca.domain.patron.repository;
 
 import com.escola.biblioteca.domain.patron.model.Patron;
+import com.escola.biblioteca.domain.patron.model.enums.PatronProfile;
+import com.escola.biblioteca.domain.patron.model.enums.PatronStatus;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,12 +57,12 @@ public class PatronQueryRepository {
         patron.setExternalId(rs.getString("external_id"));
         patron.setName(rs.getString("name"));
         patron.setPhone(rs.getString("phone"));
-        patron.setProfile(com.escola.biblioteca.domain.patron.model.enums.PatronProfile.valueOf(rs.getString("profile")));
-        patron.setStatus(com.escola.biblioteca.domain.patron.model.enums.PatronStatus.valueOf(rs.getString("status")));
+        patron.setProfile(PatronProfile.valueOf(rs.getString("profile")));
+        patron.setStatus(PatronStatus.valueOf(rs.getString("status")));
         patron.setFineBalance((Integer) rs.getObject("fine_balance"));
         patron.setVersion(rs.getLong("version"));
-        patron.setCreatedAt(rs.getObject("created_at", java.time.OffsetDateTime.class));
-        patron.setUpdatedAt(rs.getObject("updated_at", java.time.OffsetDateTime.class));
+        patron.setCreatedAt(rs.getObject("created_at", OffsetDateTime.class));
+        patron.setUpdatedAt(rs.getObject("updated_at", OffsetDateTime.class));
         return patron;
     }
 

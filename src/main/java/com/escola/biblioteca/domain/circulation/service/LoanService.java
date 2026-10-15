@@ -11,15 +11,20 @@ import com.escola.biblioteca.domain.patron.model.Patron;
 import com.escola.biblioteca.domain.patron.service.PatronService;
 import com.escola.biblioteca.domain.circulation.repository.HoldRepository;
 import com.escola.biblioteca.domain.catalog.repository.ItemRepository;
+import com.escola.biblioteca.domain.circulation.repository.LoanQueryRepository;
 import com.escola.biblioteca.domain.circulation.repository.LoanRepository;
 import com.escola.biblioteca.domain.outbox.repository.OutboxEventRepository;
+import com.escola.biblioteca.dto.response.LoanResponse;
 import com.escola.biblioteca.exception.BusinessException;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
+import com.escola.biblioteca.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,11 +34,20 @@ import java.util.UUID;
 public class LoanService {
 
     private final LoanRepository loanRepository;
+    private final LoanQueryRepository loanQueryRepository;
     private final ItemRepository itemRepository;
     private final HoldRepository holdRepository;
     private final PatronService patronService;
     private final OutboxEventRepository outboxEventRepository;
     private final DashboardPublisher dashboardPublisher;
+
+    public Page<LoanResponse> findAllWithDetails(UUID patronId, String status, String term, Pageable pageable) {
+        return loanQueryRepository.findAllWithDetails(patronId, status, term, pageable);
+    }
+
+    public List<LoanResponse> findAllWithDetails(UUID patronId, String status, String term) {
+        return loanQueryRepository.findAllWithDetails(patronId, status, term);
+    }
 
     @Transactional
     public Loan checkout(UUID patronId, UUID itemId, UUID libraryId) {
@@ -227,8 +241,8 @@ public class LoanService {
         event.setAggregateType("Loan");
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
-        event.setPayload(com.escola.biblioteca.util.JsonUtil.toJson(payload));
-        event.setCreatedAt(java.time.OffsetDateTime.now());
+        event.setPayload(JsonUtil.toJson(payload));
+        event.setCreatedAt(OffsetDateTime.now());
         event.marcarNovo();
         outboxEventRepository.save(event);
     }

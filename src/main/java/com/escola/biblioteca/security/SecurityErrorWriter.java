@@ -25,6 +25,9 @@ public class SecurityErrorWriter {
 
     public void write(HttpServletRequest request, HttpServletResponse response, HttpStatus status, String code)
             throws IOException {
+        if (response.isCommitted()) {
+            return;
+        }
         String message;
         try {
             message = messageSource.getMessage(code, new Object[0], RequestContextUtils.getLocale(request));

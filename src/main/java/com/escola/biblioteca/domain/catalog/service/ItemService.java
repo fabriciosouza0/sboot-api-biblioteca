@@ -3,10 +3,14 @@ package com.escola.biblioteca.domain.catalog.service;
 import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.domain.catalog.model.Item;
 import com.escola.biblioteca.domain.catalog.model.enums.ItemStatus;
+import com.escola.biblioteca.domain.catalog.repository.ItemQueryRepository;
 import com.escola.biblioteca.domain.catalog.repository.ItemRepository;
 import com.escola.biblioteca.dto.request.ItemRequest;
+import com.escola.biblioteca.dto.response.ItemResponse;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +23,16 @@ import java.util.UUID;
 public class ItemService {
 
     private final ItemRepository itemRepository;
+    private final ItemQueryRepository itemQueryRepository;
     private final DashboardPublisher dashboardPublisher;
+
+    public Page<ItemResponse> findAllWithDetails(UUID workId, UUID libraryId, ItemStatus status, String term, Pageable pageable) {
+        return itemQueryRepository.findAllWithDetails(workId, libraryId, status, term, pageable);
+    }
+
+    public List<ItemResponse> findAllWithDetails(UUID workId, UUID libraryId, ItemStatus status, String term) {
+        return itemQueryRepository.findAllWithDetails(workId, libraryId, status, term);
+    }
 
     public List<Item> findByWorkId(UUID workId) {
         return itemRepository.findByWorkId(workId);

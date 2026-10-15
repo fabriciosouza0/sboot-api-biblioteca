@@ -3,6 +3,7 @@ package com.escola.biblioteca.config;
 import com.escola.biblioteca.security.JwtAuthenticationFilter;
 import com.escola.biblioteca.security.RateLimitFilter;
 import com.escola.biblioteca.security.SecurityErrorWriter;
+import jakarta.servlet.DispatcherType;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,6 +58,8 @@ public class SecurityConfig {
                             }
                         }))
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()

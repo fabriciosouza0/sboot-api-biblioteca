@@ -3,6 +3,7 @@ package com.escola.biblioteca.domain.catalog.service;
 import com.escola.biblioteca.dashboard.DashboardPublisher;
 import com.escola.biblioteca.domain.catalog.model.Item;
 import com.escola.biblioteca.domain.catalog.model.enums.ItemStatus;
+import com.escola.biblioteca.domain.catalog.repository.ItemQueryRepository;
 import com.escola.biblioteca.domain.catalog.repository.ItemRepository;
 import com.escola.biblioteca.dto.request.ItemRequest;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
@@ -26,6 +27,9 @@ class ItemServiceTest {
 
     @Mock
     private ItemRepository itemRepository;
+
+    @Mock
+    private ItemQueryRepository itemQueryRepository;
 
     @Mock
     private DashboardPublisher dashboardPublisher;

@@ -40,6 +40,9 @@ class LoanServiceTest {
     private LoanRepository loanRepository;
 
     @Mock
+    private com.escola.biblioteca.domain.circulation.repository.LoanQueryRepository loanQueryRepository;
+
+    @Mock
     private ItemRepository itemRepository;
 
     @Mock

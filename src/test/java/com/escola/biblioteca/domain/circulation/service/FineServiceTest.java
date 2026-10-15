@@ -39,6 +39,9 @@ class FineServiceTest {
     private FineRepository fineRepository;
 
     @Mock
+    private com.escola.biblioteca.domain.circulation.repository.FineQueryRepository fineQueryRepository;
+
+    @Mock
     private LoanRepository loanRepository;
 
     @Mock

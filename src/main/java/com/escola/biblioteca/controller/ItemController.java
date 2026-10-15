@@ -5,6 +5,11 @@ import com.escola.biblioteca.domain.catalog.service.ItemService;
 import com.escola.biblioteca.dto.request.ItemRequest;
 import com.escola.biblioteca.dto.request.TransferRequest;
 import lombok.RequiredArgsConstructor;
+import com.escola.biblioteca.domain.catalog.model.enums.ItemStatus;
+import com.escola.biblioteca.dto.response.ItemResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +25,13 @@ public class ItemController {
     private final ItemService itemService;
 
     @GetMapping
-    public List<Item> listar(@RequestParam(required = false) UUID workId) {
-        if (workId != null) {
-            return itemService.findByWorkId(workId);
-        }
-        return itemService.findAll();
+    public Page<ItemResponse> listar(
+            @RequestParam(required = false) UUID workId,
+            @RequestParam(required = false) UUID libraryId,
+            @RequestParam(required = false) ItemStatus status,
+            @RequestParam(required = false) String term,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return itemService.findAllWithDetails(workId, libraryId, status, term, pageable);
     }
 
     @PostMapping

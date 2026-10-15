@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +34,9 @@ class HoldServiceTest {
 
     @Mock
     private HoldRepository holdRepository;
+
+    @Mock
+    private com.escola.biblioteca.domain.circulation.repository.HoldQueryRepository holdQueryRepository;
 
     @Mock
     private ItemRepository itemRepository;
@@ -195,7 +199,7 @@ class HoldServiceTest {
         expired.setId(UUID.randomUUID());
         expired.setWorkId(workId);
         expired.setLibraryId(libraryId);
-        expired.setExpiresAt(java.time.OffsetDateTime.now().minusHours(1));
+        expired.setExpiresAt(OffsetDateTime.now().minusHours(1));
 
         Hold nextInQueue = createHold(HoldStatus.WAITING);
         nextInQueue.setId(UUID.randomUUID());

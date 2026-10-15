@@ -7,11 +7,16 @@ import com.escola.biblioteca.domain.circulation.policy.LoanPolicy;
 import com.escola.biblioteca.domain.outbox.model.OutboxEvent;
 import com.escola.biblioteca.domain.patron.model.Patron;
 import com.escola.biblioteca.domain.patron.service.PatronService;
+import com.escola.biblioteca.domain.circulation.repository.HoldQueryRepository;
 import com.escola.biblioteca.domain.circulation.repository.HoldRepository;
 import com.escola.biblioteca.domain.outbox.repository.OutboxEventRepository;
+import com.escola.biblioteca.dto.response.HoldResponse;
 import com.escola.biblioteca.exception.BusinessException;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
+import com.escola.biblioteca.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
@@ -26,9 +31,18 @@ import java.util.UUID;
 public class HoldService {
 
     private final HoldRepository holdRepository;
+    private final HoldQueryRepository holdQueryRepository;
     private final PatronService patronService;
     private final OutboxEventRepository outboxEventRepository;
     private final DashboardPublisher dashboardPublisher;
+
+    public Page<HoldResponse> findAllWithDetails(UUID patronId, String status, String term, Pageable pageable) {
+        return holdQueryRepository.findAllWithDetails(patronId, status, term, pageable);
+    }
+
+    public List<HoldResponse> findAllWithDetails(UUID patronId, String status, String term) {
+        return holdQueryRepository.findAllWithDetails(patronId, status, term);
+    }
 
     @Transactional
     public Hold placeHold(UUID patronId, UUID workId, UUID libraryId) {
@@ -156,8 +170,8 @@ public class HoldService {
         event.setAggregateType("Hold");
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
-        event.setPayload(com.escola.biblioteca.util.JsonUtil.toJson(payload));
-        event.setCreatedAt(java.time.OffsetDateTime.now());
+        event.setPayload(JsonUtil.toJson(payload));
+        event.setCreatedAt(OffsetDateTime.now());
         event.marcarNovo();
         outboxEventRepository.save(event);
     }

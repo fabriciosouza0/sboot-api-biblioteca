@@ -10,9 +10,12 @@ import com.escola.biblioteca.domain.catalog.repository.LibraryRepository;
 import com.escola.biblioteca.domain.outbox.repository.OutboxEventRepository;
 import com.escola.biblioteca.exception.BusinessException;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
+import com.escola.biblioteca.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -140,8 +143,8 @@ public class CatalogService {
         event.setAggregateType("Item");
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
-        event.setPayload(com.escola.biblioteca.util.JsonUtil.toJson(payload));
-        event.setCreatedAt(java.time.OffsetDateTime.now());
+        event.setPayload(JsonUtil.toJson(payload));
+        event.setCreatedAt(OffsetDateTime.now());
         event.marcarNovo();
         outboxEventRepository.save(event);
     }

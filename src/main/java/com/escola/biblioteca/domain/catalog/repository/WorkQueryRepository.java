@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -61,8 +62,8 @@ public class WorkQueryRepository {
         work.setCoverUrl(rs.getString("cover_url"));
         work.setDescription(rs.getString("description"));
         work.setVersion(rs.getLong("version"));
-        work.setCreatedAt(rs.getObject("created_at", java.time.OffsetDateTime.class));
-        work.setUpdatedAt(rs.getObject("updated_at", java.time.OffsetDateTime.class));
+        work.setCreatedAt(rs.getObject("created_at", OffsetDateTime.class));
+        work.setUpdatedAt(rs.getObject("updated_at", OffsetDateTime.class));
         return work;
     }
 

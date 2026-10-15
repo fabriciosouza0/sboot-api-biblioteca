@@ -9,13 +9,18 @@ import com.escola.biblioteca.domain.circulation.model.enums.LoanStatus;
 import com.escola.biblioteca.domain.outbox.model.OutboxEvent;
 import com.escola.biblioteca.domain.patron.model.Patron;
 import com.escola.biblioteca.domain.patron.service.PatronService;
+import com.escola.biblioteca.domain.circulation.repository.FineQueryRepository;
 import com.escola.biblioteca.domain.circulation.repository.FineRepository;
 import com.escola.biblioteca.domain.circulation.repository.LoanRepository;
 import com.escola.biblioteca.domain.outbox.repository.OutboxEventRepository;
 import com.escola.biblioteca.domain.patron.repository.ProfileConfigRepository;
+import com.escola.biblioteca.dto.response.FineResponse;
 import com.escola.biblioteca.exception.BusinessException;
 import com.escola.biblioteca.exception.ResourceNotFoundException;
+import com.escola.biblioteca.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
@@ -30,11 +35,20 @@ import java.util.UUID;
 public class FineService {
 
     private final FineRepository fineRepository;
+    private final FineQueryRepository fineQueryRepository;
     private final LoanRepository loanRepository;
     private final PatronService patronService;
     private final ProfileConfigRepository profileConfigRepository;
     private final OutboxEventRepository outboxEventRepository;
     private final DashboardPublisher dashboardPublisher;
+
+    public Page<FineResponse> findAllWithDetails(UUID patronId, String status, String term, Pageable pageable) {
+        return fineQueryRepository.findAllWithDetails(patronId, status, term, pageable);
+    }
+
+    public List<FineResponse> findAllWithDetails(UUID patronId, String status, String term) {
+        return fineQueryRepository.findAllWithDetails(patronId, status, term);
+    }
 
     @Transactional
     public Fine assessOverdue(UUID loanId) {
@@ -313,8 +327,8 @@ public class FineService {
         event.setAggregateType("Fine");
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
-        event.setPayload(com.escola.biblioteca.util.JsonUtil.toJson(payload));
-        event.setCreatedAt(java.time.OffsetDateTime.now());
+        event.setPayload(JsonUtil.toJson(payload));
+        event.setCreatedAt(OffsetDateTime.now());
         event.marcarNovo();
         outboxEventRepository.save(event);
     }

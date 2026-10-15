@@ -2,12 +2,15 @@ package com.escola.biblioteca.controller;
 
 import com.escola.biblioteca.domain.circulation.model.Hold;
 import com.escola.biblioteca.domain.circulation.service.HoldService;
+import com.escola.biblioteca.dto.response.HoldResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -18,8 +21,12 @@ public class HoldController {
     private final HoldService holdService;
 
     @GetMapping
-    public List<Hold> listar() {
-        return holdService.findAll();
+    public Page<HoldResponse> listar(
+            @RequestParam(required = false) UUID patronId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String term,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return holdService.findAllWithDetails(patronId, status, term, pageable);
     }
 
     @PostMapping
