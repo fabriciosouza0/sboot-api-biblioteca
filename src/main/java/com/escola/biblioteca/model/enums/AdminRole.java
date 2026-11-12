@@ -1,6 +1,8 @@
 package com.escola.biblioteca.model.enums;
 
-public enum AdminRole {
+import com.escola.biblioteca.config.converter.PostgreSqlEnum;
+
+public enum AdminRole implements PostgreSqlEnum {
     GLOBAL_ADMIN,
     INSTITUTION_ADMIN
 }

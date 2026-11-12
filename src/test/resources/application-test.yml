@@ -14,6 +14,11 @@ spring:
     baseline-on-migrate: true
     baseline-version: 1
 
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
 app:
   jwt:
     # >= 32 bytes (raw fallback) para passar na validacao de forca

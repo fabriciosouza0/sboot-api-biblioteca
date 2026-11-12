@@ -24,13 +24,26 @@ spring:
     locale: pt-BR
     locale-resolver: accept-header
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 1000ms
+          multiplier: 2.0
+          max-attempts: 3
+
 # JWT
 app:
   jwt:
     # Obrigatório (sem default): gere com `openssl rand -base64 32`.
-    secret: ${JWT_SECRET:wgIUi0eeBc9C1dE9fLxEI0fh+MSfrNDcjHU0eRa7riA=}
+    secret: ${JWT_SECRET}
     # Opcional: chave anterior durante janela de rotação sem downtime.
-    previous-secret: ${JWT_PREVIOUS_SECRET:c2rWXUBubXSflmbZu4UHE0/q2rE+bVo4jkAPbYshlm0=}
+    previous-secret: ${JWT_PREVIOUS_SECRET:}
     access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:420000}   # 7 min
     refresh-expiration-days: ${JWT_REFRESH_EXPIRATION_DAYS:7}  # 7 dias
     # Cookie httpOnly do refresh token.
@@ -44,6 +57,9 @@ app:
     enabled: ${RATE_LIMIT_ENABLED:true}
     refresh-capacity: ${RATE_LIMIT_REFRESH_CAPACITY:10}  # 10 req/min /api/auth/refresh
     login-capacity: ${RATE_LIMIT_LOGIN_CAPACITY:5}        # 5 req/min /api/auth/login
+
+  worker:
+    enabled: ${APP_WORKER_ENABLED:true}
 
   sse:
     heartbeat-ms: ${SSE_HEARTBEAT_MS:15000}

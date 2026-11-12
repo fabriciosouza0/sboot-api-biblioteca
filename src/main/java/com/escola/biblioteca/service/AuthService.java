@@ -71,8 +71,9 @@ public class AuthService {
             // Migração de senhas em texto puro (banco legado) para BCrypt.
             senhaOk = adm.getSenha().equals(request.senha());
             if (senhaOk) {
-                adm.setSenha(passwordEncoder.encode(request.senha()));
-                admRepository.save(adm);
+                String encoded = passwordEncoder.encode(request.senha());
+                adm.setSenha(encoded);
+                admRepository.updateSenha(adm.getCodigo(), encoded);
             }
         }
         if (!senhaOk) {

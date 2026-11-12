@@ -1,5 +1,7 @@
 package com.escola.biblioteca.domain.circulation.policy;
 
+import com.escola.biblioteca.domain.patron.model.Patron;
+import com.escola.biblioteca.domain.patron.repository.ProfileConfigRepository;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -20,8 +22,8 @@ public class LoanPolicy implements Serializable {
     private final Integer fineRateCents;
     private final Integer fineCapCents;
 
-    public static LoanPolicy fromProfileConfig(com.escola.biblioteca.domain.patron.repository.ProfileConfigRepository repo,
-                                                com.escola.biblioteca.domain.patron.model.Patron patron) {
+    public static LoanPolicy fromProfileConfig(ProfileConfigRepository repo,
+																							 Patron patron) {
         var config = repo.findByInstitutionIdAndProfile(patron.getInstitutionId(), patron.getProfile())
                 .orElseThrow(() -> new IllegalStateException(
                         "Perfil %s não configurado para instituição %s".formatted(patron.getProfile(), patron.getInstitutionId())));
